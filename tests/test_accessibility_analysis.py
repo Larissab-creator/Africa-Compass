@@ -35,6 +35,8 @@ def test_accessibility_analysis_writes_outputs(tmp_path, monkeypatch):
     assert all(path.exists() for path in result.values())
     summary = pd.read_csv(result["service_summary"])
     counts = dict(zip(summary["analysis_group"], summary["mapped_locations"]))
+    subcategories = pd.read_csv(result["subcategory_summary"])
+    assert set(["subcategory", "analysis_group", "mapped_locations"]).issubset(subcategories.columns)
     assert counts["healthcare"] == 1
     assert counts["education"] == 1
     assert counts["food_retail"] == 1
