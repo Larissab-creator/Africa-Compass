@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - "src/mahe_roads.py"
+      - "src/mahe_bus_routes.py"
       - "src/build_map_site.py"
       - "docs/map/**"
       - "requirements.txt"
@@ -46,6 +47,9 @@ jobs:
       - name: Download Mahé road geometry and build map data
         run: python src/mahe_roads.py
 
+      - name: Download Mahé bus routes and mapped stops
+        run: python src/mahe_bus_routes.py
+
       - name: Assemble interactive map website
         run: python src/build_map_site.py
 
@@ -63,6 +67,11 @@ jobs:
             data/processed/mahe_roads.csv
             data/processed/mahe_roads.geojson
             data/processed/mahe_road_changes.csv
+            data/raw/mahe_bus_routes_overpass.json
+            data/processed/mahe_bus_routes.geojson
+            data/processed/mahe_bus_stops.geojson
+            data/processed/mahe_bus_routes.csv
+            data/processed/mahe_bus_stops.csv
             data/history/mahe_roads_snapshot.json
             outputs/mahe_road_network.html
             _site/
