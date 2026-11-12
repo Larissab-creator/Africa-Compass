@@ -32,7 +32,7 @@ The 135 records in “other mapped services” include a mixture of dining, hosp
 The Victoria pilot bounding box is divided into approximately 500m by 500m cells. The grid contains 81 cells. For each cell, the pipeline calculates:
 - counts of all mapped features, service features and bus stops;
 - counts of selected service groups; and
-- straight-line distance from the cell centre to the nearest mapped healthcare, education or food-retail point.
+- straight-line distance from the cell centre to the nearest mapped healthcare, education, food-retail or bus-stop point.
 
 Distances use the haversine great-circle formula. They are not walking distances, driving distances, journey times or route-network measurements.
 
@@ -43,7 +43,8 @@ Distances use the haversine great-circle formula. They are not walking distances
 - Median straight-line distance from grid-cell centres to the nearest mapped healthcare point is 1.056 km.
 - Median straight-line distance to the nearest mapped education point is 0.891 km.
 - Median straight-line distance to the nearest mapped food-retail point is 0.578 km.
-- 18.5% of grid-cell centres are within 500m of a mapped healthcare point; 21.0% are within 500m of a mapped education point; 39.5% are within 500m of a mapped food-retail point.
+- Median straight-line distance to the nearest mapped bus stop is 0.203 km.
+- 18.5% of grid-cell centres are within 500m of a mapped healthcare point; 21.0% are within 500m of a mapped education point; 39.5% are within 500m of a mapped food-retail point; 77.8% are within 500m of a mapped bus stop.
 
 These percentages are proportions of grid-cell centres, not proportions of residents or households.
 
