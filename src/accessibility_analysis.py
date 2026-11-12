@@ -178,6 +178,15 @@ def analyse_accessibility(input_csv: str | Path = INPUT_CSV) -> dict[str, Path]:
         (summary["mapped_locations"] / total_services * 100).round(1)
         if total_services else 0.0
     )
+    subcategory_summary = (
+        services.groupby(["subcategory", "analysis_group", "analysis_group_label"], as_index=False)
+        .agg(mapped_locations=("osm_id", "count"))
+        .sort_values("mapped_locations", ascending=False)
+    )
+    subcategory_summary["share_of_mapped_services_pct"] = (
+        (subcategory_summary["mapped_locations"] / total_services * 100).round(1)
+        if total_services else 0.0
+    )
     grid = make_accessibility_grid(features)
 
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
@@ -185,12 +194,14 @@ def analyse_accessibility(input_csv: str | Path = INPUT_CSV) -> dict[str, Path]:
     paths = {
         "service_points": PROCESSED_DIR / "victoria_service_points.csv",
         "service_summary": PROCESSED_DIR / "victoria_service_summary.csv",
+        "subcategory_summary": PROCESSED_DIR / "victoria_service_subcategory_summary.csv",
         "grid": PROCESSED_DIR / "victoria_accessibility_grid_500m.csv",
         "metrics": PROCESSED_DIR / "victoria_accessibility_metrics.json",
         "map": OUTPUT_DIR / "victoria_service_accessibility_map.html",
     }
     services.to_csv(paths["service_points"], index=False)
     summary.to_csv(paths["service_summary"], index=False)
+    subcategory_summary.to_csv(paths["subcategory_summary"], index=False)
     grid.to_csv(paths["grid"], index=False)
 
     metrics = {
