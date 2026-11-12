@@ -24,7 +24,11 @@ SITE_DATA_DIR = SITE_DIR / "data"
 
 def build_site() -> dict[str, Path]:
     """Copy the interactive app and current road data into a Pages-ready folder."""
-    required = [SOURCE_GEOJSON, SOURCE_ROADS_CSV, SOURCE_CHANGES_CSV, SOURCE_BUS_ROUTES_GEOJSON, SOURCE_BUS_STOPS_GEOJSON, SOURCE_BUS_ROUTES_CSV, SOURCE_BUS_STOPS_CSV, SOURCE_HTML]
+    required = [
+        SOURCE_GEOJSON, SOURCE_ROADS_CSV, SOURCE_CHANGES_CSV,
+        SOURCE_BUS_ROUTES_GEOJSON, SOURCE_BUS_STOPS_GEOJSON,
+        SOURCE_BUS_ROUTES_CSV, SOURCE_BUS_STOPS_CSV, SOURCE_HTML,
+    ]
     missing = [str(path) for path in required if not path.exists()]
     if missing:
         raise FileNotFoundError("Required road-map inputs are missing: " + ", ".join(missing))
@@ -83,6 +87,10 @@ def build_site() -> dict[str, Path]:
         "geojson": SITE_DATA_DIR / "mahe_roads.geojson",
         "roads_csv": SITE_DATA_DIR / "mahe_roads.csv",
         "changes_csv": SITE_DATA_DIR / "mahe_road_changes.csv",
+        "bus_routes_geojson": SITE_DATA_DIR / "mahe_bus_routes.geojson",
+        "bus_stops_geojson": SITE_DATA_DIR / "mahe_bus_stops.geojson",
+        "bus_routes_csv": SITE_DATA_DIR / "mahe_bus_routes.csv",
+        "bus_stops_csv": SITE_DATA_DIR / "mahe_bus_stops.csv",
         "metadata": metadata_path,
     }
 
