@@ -146,6 +146,8 @@ def validate_features(df: pd.DataFrame) -> pd.DataFrame:
     """Remove unusable records and duplicate OSM objects."""
     required = ["osm_id", "osm_type", "name", "latitude", "longitude"]
     clean = df.dropna(subset=required).copy()
+    clean = clean[clean["osm_id"].astype(str).str.strip().ne("")]
+    clean = clean[clean["osm_type"].astype(str).str.strip().ne("")]
     clean = clean[clean["name"].str.strip().ne("")]
     clean = clean[clean["latitude"].between(-90, 90)]
     clean = clean[clean["longitude"].between(-180, 180)]
