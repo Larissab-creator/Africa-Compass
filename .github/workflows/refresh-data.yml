@@ -1,0 +1,41 @@
+name: Refresh Victoria OSM dataset
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Download and process OpenStreetMap data
+        run: python src/sey_pipeline.py
+
+      - name: Build interactive map
+        run: python src/build_map.py
+
+      - name: Package generated outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: africa-compass-victoria-${{ github.run_number }}
+          path: |
+            data/raw/victoria_osm_raw.json
+            data/processed/victoria_places.csv
+            data/processed/africa_compass.duckdb
+            outputs/victoria_interactive_map.html
+          if-no-files-found: error
+          retention-days: 14
