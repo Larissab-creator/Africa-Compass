@@ -1,4 +1,4 @@
 pandas>=2.1
 requests>=2.31
-duckdb>=1.0
+duckdb>=1.0\nfolium>=0.16
 pytest>=8.0
