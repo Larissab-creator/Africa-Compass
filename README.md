@@ -114,16 +114,24 @@ Generated data files are not committed to the repository by default. Run the pip
 Africa-Compass/
 ├── data/
 │   ├── raw/
-│   └── processed/
+│   ├── processed/
+│   └── history/
+│       └── mahe_roads_snapshot.json
 ├── src/
 │   ├── sey_pipeline.py
 │   ├── build_map.py
+│   ├── accessibility_analysis.py
+│   ├── mahe_roads.py
 │   └── __init__.py
 ├── outputs/
+│   ├── mahe_road_network.html (generated)
 │   └── victoria_interactive_map.html (generated)
 ├── tests/
 │   ├── test_pipeline.py
-│   └── test_accessibility_analysis.py
+│   ├── test_accessibility_analysis.py
+│   └── test_mahe_roads.py
+├── docs/
+│   └── mahe-road-map.md
 ├── requirements.txt
 └── README.md
 ```
