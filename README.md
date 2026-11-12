@@ -77,6 +77,8 @@ python src/build_map.py
 
 The interactive HTML map is saved to `outputs/victoria_interactive_map.html`. Open that file in a web browser.
 
+The project can also be run directly from GitHub without a local Python setup. Open the [Actions tab](https://github.com/Larissab-creator/Africa-Compass/actions/workflows/refresh-data.yml), select **Refresh Victoria OSM dataset**, choose **Run workflow**, and wait for the run to finish. Download the `africa-compass-victoria` artifact from the completed run to get the raw JSON, CSV, DuckDB database and interactive HTML map. The artifact is retained for 14 days.
+
 ### 6. Run the tests
 
 ```bash
