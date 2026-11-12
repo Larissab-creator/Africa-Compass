@@ -81,18 +81,40 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Save Mahé road snapshot for the next comparison
+      - name: Commit baseline raw API responses and save road snapshot
         run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          for filename in (
+              "data/raw/mahe_roads_overpass.json",
+              "data/raw/mahe_bus_routes_overpass.json",
+          ):
+              path = Path(filename)
+              if not path.is_file() or path.stat().st_size == 0:
+                  raise SystemExit(f"Missing or empty raw API response: {filename}")
+              payload = json.loads(path.read_text(encoding="utf-8"))
+              if not isinstance(payload.get("elements"), list):
+                  raise SystemExit(f"Unexpected Overpass response structure: {filename}")
+              print(f"Validated {filename}: {len(payload['elements'])} raw elements")
+          PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/history/mahe_roads_snapshot.json
+          if ! git ls-files --error-unmatch data/raw/mahe_roads_overpass.json data/raw/mahe_bus_routes_overpass.json >/dev/null 2>&1; then
+            git add -f data/raw/mahe_roads_overpass.json data/raw/mahe_bus_routes_overpass.json
+            echo "Adding the original raw API responses as a reproducible baseline."
+          else
+            echo "Raw API baseline already exists; refreshed responses remain in this run's downloadable artefact."
+          fi
           if ! git diff --cached --quiet; then
-            git commit -m "Update Mahé road network snapshot [skip ci]"
+            git commit -m "Commit raw Mahé API snapshots and road baseline [skip ci]"
             git fetch origin main
             git rebase origin/main
             git push origin HEAD:main
           else
-            echo "Mahé road snapshot has no changes."
+            echo "No repository snapshot changes to commit."
           fi
 
   deploy:
