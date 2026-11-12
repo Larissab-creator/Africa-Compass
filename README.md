@@ -88,7 +88,7 @@ python src/accessibility_analysis.py
 ```
 
 
-The project can also be run directly from GitHub without a local Python setup. Open the [Actions tab](https://github.com/Larissab-creator/Africa-Compass/actions/workflows/refresh-data.yml), select **Refresh Victoria OSM dataset**, choose **Run workflow**, and wait for the run to finish. Download the `africa-compass-victoria` artifact from the completed run to get the raw JSON, CSV, DuckDB database and interactive HTML map. The artifact is retained for 14 days.
+The Mahé road map can be refreshed directly on GitHub without a local Python setup. Open the [Mahé road-map workflow](https://github.com/Larissab-creator/Africa-Compass/actions/workflows/refresh-mahe-roads.yml), choose **Run workflow**, and download the `africa-compass-mahe-roads` artifact from the completed run. It contains the interactive island map, road CSV, GeoJSON, change log and snapshot. A scheduled refresh also runs weekly. The first successful run creates the baseline; later runs compare against it.
 
 ### 6. Run the tests
 
@@ -130,6 +130,10 @@ Africa-Compass/
 │   ├── test_pipeline.py
 │   ├── test_accessibility_analysis.py
 │   └── test_mahe_roads.py
+├── .github/
+│   └── workflows/
+│       ├── refresh-mahe-roads.yml
+│       └── refresh-data.yml
 ├── docs/
 │   └── mahe-road-map.md
 ├── requirements.txt
