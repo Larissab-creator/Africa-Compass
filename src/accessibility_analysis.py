@@ -201,6 +201,23 @@ def analyse_accessibility(input_csv: str | Path = INPUT_CSV) -> dict[str, Path]:
         if total_services else 0.0
     )
     grid = make_accessibility_grid(features)
+    proximity_rows = []
+    proximity_labels = {
+        "healthcare": "Healthcare",
+        "education": "Education and childcare",
+        "food_retail": "Food retail",
+        "bus_stop": "Bus stops",
+    }
+    for group, label in proximity_labels.items():
+        distances = grid[f"nearest_{group}_km"].dropna()
+        proximity_rows.append({
+            "service_type": group,
+            "service_label": label,
+            "median_distance_km": round(float(distances.median()), 3),
+            "grid_cells_within_500m": int((distances <= 0.5).sum()),
+            "share_of_grid_cells_within_500m_pct": round(float((distances <= 0.5).mean() * 100), 1),
+        })
+    proximity_summary = pd.DataFrame(proximity_rows)
 
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -208,6 +225,7 @@ def analyse_accessibility(input_csv: str | Path = INPUT_CSV) -> dict[str, Path]:
         "service_points": PROCESSED_DIR / "victoria_service_points.csv",
         "service_summary": PROCESSED_DIR / "victoria_service_summary.csv",
         "subcategory_summary": PROCESSED_DIR / "victoria_service_subcategory_summary.csv",
+        "proximity_summary": PROCESSED_DIR / "victoria_proximity_summary.csv",
         "grid": PROCESSED_DIR / "victoria_accessibility_grid_500m.csv",
         "metrics": PROCESSED_DIR / "victoria_accessibility_metrics.json",
         "map": OUTPUT_DIR / "victoria_service_accessibility_map.html",
@@ -215,6 +233,7 @@ def analyse_accessibility(input_csv: str | Path = INPUT_CSV) -> dict[str, Path]:
     services.to_csv(paths["service_points"], index=False)
     summary.to_csv(paths["service_summary"], index=False)
     subcategory_summary.to_csv(paths["subcategory_summary"], index=False)
+    proximity_summary.to_csv(paths["proximity_summary"], index=False)
     grid.to_csv(paths["grid"], index=False)
 
     metrics = {
