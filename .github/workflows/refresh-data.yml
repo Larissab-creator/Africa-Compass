@@ -2,6 +2,13 @@ name: Refresh Victoria OSM dataset
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "src/sey_pipeline.py"
+      - "src/build_map.py"
+      - "requirements.txt"
+      - ".github/workflows/refresh-data.yml"
 
 permissions:
   contents: read
