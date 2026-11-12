@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+.env
+
+# Generated OpenStreetMap extracts and processed outputs
+data/raw/*.json
+!data/raw/.gitkeep
+data/processed/*.csv
+data/processed/*.duckdb
+data/processed/*.db
+!data/processed/.gitkeep
+
+# Editor / operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
