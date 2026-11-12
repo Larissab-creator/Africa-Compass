@@ -34,14 +34,15 @@ def test_transform_features_extracts_named_node_and_way():
     assert road["latitude"] == -4.621
 
 
-def test_validate_features_removes_bad_and_duplicate_records():
+def test_validate_features_removes_bad_duplicate_and_out_of_area_records():
     sample = pd.DataFrame(
         [
-            {"osm_id": "1", "osm_type": "node", "name": "A", "latitude": -4.6, "longitude": 55.4},
-            {"osm_id": "1", "osm_type": "node", "name": "A duplicate", "latitude": -4.6, "longitude": 55.4},
-            {"osm_id": "", "osm_type": "node", "name": "Blank ID", "latitude": -4.6, "longitude": 55.4},
-            {"osm_id": "3", "osm_type": "way", "name": "Bad latitude", "latitude": 120, "longitude": 55.4},
-            {"osm_id": "4", "osm_type": "way", "name": "Missing coordinates", "latitude": None, "longitude": 55.4},
+            {"osm_id": "1", "osm_type": "node", "name": "A", "latitude": -4.62, "longitude": 55.45},
+            {"osm_id": "1", "osm_type": "node", "name": "A duplicate", "latitude": -4.62, "longitude": 55.45},
+            {"osm_id": "", "osm_type": "node", "name": "Blank ID", "latitude": -4.62, "longitude": 55.45},
+            {"osm_id": "3", "osm_type": "way", "name": "Bad latitude", "latitude": 120, "longitude": 55.45},
+            {"osm_id": "4", "osm_type": "way", "name": "Missing coordinates", "latitude": None, "longitude": 55.45},
+            {"osm_id": "5", "osm_type": "relation", "name": "Outside Victoria", "latitude": -4.50, "longitude": 55.45},
         ]
     )
 
@@ -49,6 +50,7 @@ def test_validate_features_removes_bad_and_duplicate_records():
 
     assert len(result) == 1
     assert result.iloc[0]["osm_id"] == "1"
+    assert result.iloc[0]["name"] == "A"
 
 
 def test_save_outputs_writes_csv_and_duckdb(tmp_path, monkeypatch):
