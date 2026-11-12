@@ -164,7 +164,7 @@
         <h2>Report a missing or incorrect road</h2>
         <textarea id="report-text" placeholder="Describe the missing road, incorrect name or map detail…"></textarea>
         <button class="primary-btn" id="report-button">Prepare an OpenStreetMap report</button>
-        <p class="report-note">This opens OpenStreetMap's note tool at the map centre. Your report is not sent to Africa Compass; review and submit it yourself on OpenStreetMap. For urgent road hazards, use the relevant local authority instead.</p>
+        <p class="report-note">This opens OpenStreetMap at the map centre with the Notes layer available. Right-click the location, choose Add a note here, paste your report and submit it yourself. Your report is not sent to Africa Compass. For urgent road hazards, use the relevant local authority instead.</p>
       </section>
 
       <p class="footer-note">Road changes describe edits to OpenStreetMap records, not confirmed road construction. Map data © OpenStreetMap contributors · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">ODbL licence</a>.</p>
@@ -352,16 +352,18 @@
       return;
     }
     const centre = map.getCenter();
-    const noteUrl = "https://www.openstreetmap.org/note/new?lat=" +
-      encodeURIComponent(centre.lat) + "&lon=" + encodeURIComponent(centre.lng) +
-      "#map=18/" + centre.lat + "/" + centre.lng;
-    try {
-      await navigator.clipboard.writeText("Africa Compass map issue: " + text);
-      alert("Your report text has been copied. OpenStreetMap will open at the current map centre; paste the note and submit it there.");
-    } catch (_) {
-      alert("OpenStreetMap will open at the current map centre. Please copy your report text before submitting it.");
-    }
+    const noteUrl = "https://www.openstreetmap.org/?mlat=" +
+      encodeURIComponent(centre.lat) + "&mlon=" + encodeURIComponent(centre.lng) +
+      "#map=18/" + centre.lat + "/" + centre.lng + "&layers=N";
     window.open(noteUrl, "_blank", "noopener");
+    const report = "Africa Compass map issue: " + text +
+      "\\nLocation: " + centre.lat.toFixed(6) + ", " + centre.lng.toFixed(6);
+    try {
+      await navigator.clipboard.writeText(report);
+      alert("Your report text and coordinates have been copied. On OpenStreetMap, right-click the location, choose Add a note here, paste the text and submit it.");
+    } catch (_) {
+      alert("OpenStreetMap is open at the map centre. Please copy your report text and coordinates, then use Add a note here on OpenStreetMap.");
+    }
   });
 
   map.setView([-4.65,55.48],11);
