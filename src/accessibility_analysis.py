@@ -147,6 +147,19 @@ def make_accessibility_grid(features: pd.DataFrame) -> pd.DataFrame:
             ]
             grid[distance_col] = [round(value, 3) for value in distances]
 
+    bus_points = work.loc[
+        work["category"].eq("transport") & work["subcategory"].eq("bus_stop"),
+        ["latitude", "longitude"],
+    ].dropna().to_numpy()
+    if len(bus_points) == 0:
+        grid["nearest_bus_stop_km"] = pd.NA
+    else:
+        bus_distances = [
+            min(haversine_km(lat, lon, p[0], p[1]) for p in bus_points)
+            for lat, lon in grid[["latitude", "longitude"]].itertuples(index=False, name=None)
+        ]
+        grid["nearest_bus_stop_km"] = [round(value, 3) for value in bus_distances]
+
     for col in ("mapped_feature_count", "mapped_service_count", "mapped_bus_stop_count"):
         grid[col] = grid[col].fillna(0).astype(int)
     return grid
@@ -219,6 +232,16 @@ def analyse_accessibility(input_csv: str | Path = INPUT_CSV) -> dict[str, Path]:
         "groups": {
             row.analysis_group: int(row.mapped_locations)
             for row in summary.itertuples()
+        },
+        "grid_proximity": {
+            group: {
+                "median_distance_km": round(float(grid[f"nearest_{group}_km"].median()), 3),
+                "cells_within_500m": int((grid[f"nearest_{group}_km"] <= 0.5).sum()),
+                "share_of_grid_cells_within_500m_pct": round(
+                    float((grid[f"nearest_{group}_km"] <= 0.5).mean() * 100), 1
+                ),
+            }
+            for group in ("healthcare", "education", "food_retail", "bus_stop")
         },
         "distance_method": (
             "Straight-line haversine distance from grid-cell centre to nearest "
