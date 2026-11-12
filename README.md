@@ -15,7 +15,8 @@ This is an initial technical pilot, not a complete directory of Seychelles. Cove
 3. **Transform** – standardise names, OSM identifiers, coordinates, categories, addresses and available contact details.
 4. **Validate** – remove records with missing identifiers, names or coordinates; reject out-of-range coordinates and representative centres outside the Victoria pilot bounding box; remove duplicate OSM objects.
 5. **Load** – write a CSV file and a DuckDB table for analysis and visualisation.
-6. **Visualise** – build an interactive Folium map with switchable category layers.\n7. **Analyse mapped-service patterns** – group service tags, build an approximate 500m grid, calculate straight-line distances to selected mapped service types, and create Flourish-ready outputs.
+6. **Visualise** – build an interactive Folium map with switchable category layers.
+7. **Analyse mapped-service patterns** – group service tags, build an approximate 500m grid, calculate straight-line distances to selected mapped service types, and create Flourish-ready outputs.
 
 ### Data categories
 
@@ -73,6 +74,7 @@ After the pipeline has created the processed CSV, run:
 
 ```bash
 python src/build_map.py
+python src/accessibility_analysis.py
 ```
 
 The interactive HTML map is saved to `outputs/victoria_interactive_map.html`. The service-pattern analysis creates `outputs/victoria_service_accessibility_map.html` and CSV/JSON files under `data/processed/`. Open the HTML maps in a web browser.
@@ -111,7 +113,8 @@ Africa-Compass/
 ├── outputs/
 │   └── victoria_interactive_map.html (generated)
 ├── tests/
-│   └── test_pipeline.py
+│   ├── test_pipeline.py
+│   └── test_accessibility_analysis.py
 ├── requirements.txt
 └── README.md
 ```
@@ -128,7 +131,8 @@ Africa Compass is an independent project and is not affiliated with the OpenStre
 - The query currently focuses on named OSM features; unnamed roads and facilities are not included.
 - Some OSM objects may not have a direct point coordinate. For ways and relations, the pipeline uses the OSM centre coordinate when supplied.
 - Contact details and opening hours are included only when mapped in OSM. Missing information does not mean a service is closed or unavailable.
-- The service grouping is a first-pass classification of extracted OSM tags and requires local validation.\n- The 500m grid is not population-weighted and contains coastal and non-residential cells. Nearest-facility distances are straight-line calculations from grid-cell centres, not walking/driving network distances or travel times.
+- The service grouping is a first-pass classification of extracted OSM tags and requires local validation.
+- The 500m grid is not population-weighted and contains coastal and non-residential cells. Nearest-facility distances are straight-line calculations from grid-cell centres, not walking/driving network distances or travel times.
 
 Planned work includes expanding the geographic coverage, improving service classification and quality checks, adding an interactive map, and building analytical visualisations.
 
