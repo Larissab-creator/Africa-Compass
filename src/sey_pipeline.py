@@ -143,7 +143,7 @@ def transform_features(payload: dict[str, Any]) -> pd.DataFrame:
 
 
 def validate_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Remove unusable records and duplicate OSM objects."""
+    """Remove unusable, duplicate, and out-of-area OSM records."""
     required = ["osm_id", "osm_type", "name", "latitude", "longitude"]
     clean = df.dropna(subset=required).copy()
     clean = clean[clean["osm_id"].astype(str).str.strip().ne("")]
@@ -151,6 +151,14 @@ def validate_features(df: pd.DataFrame) -> pd.DataFrame:
     clean = clean[clean["name"].str.strip().ne("")]
     clean = clean[clean["latitude"].between(-90, 90)]
     clean = clean[clean["longitude"].between(-180, 180)]
+
+    # OSM returns ways/relations that intersect the query area, but their
+    # representative centre can fall outside it. Keep map points in the
+    # Victoria pilot boundary so island-wide features do not distort the map.
+    south, west, north, east = BBOX
+    clean = clean[clean["latitude"].between(south, north)]
+    clean = clean[clean["longitude"].between(west, east)]
+
     clean = clean.drop_duplicates(subset=["osm_type", "osm_id"])
     return clean.reset_index(drop=True)
 
