@@ -26,6 +26,14 @@ def test_build_site_copies_map_data_and_creates_metadata(tmp_path, monkeypatch):
     roads_csv.write_text("osm_id,name\n1,Victoria Road\n", encoding="utf-8")
     changes_csv = tmp_path / "changes.csv"
     changes_csv.write_text("osm_id,change_type\n", encoding="utf-8")
+    bus_routes_geojson = tmp_path / "bus_routes.geojson"
+    bus_routes_geojson.write_text(json.dumps({"type": "FeatureCollection", "features": []}), encoding="utf-8")
+    bus_stops_geojson = tmp_path / "bus_stops.geojson"
+    bus_stops_geojson.write_text(json.dumps({"type": "FeatureCollection", "features": []}), encoding="utf-8")
+    bus_routes_csv = tmp_path / "bus_routes.csv"
+    bus_routes_csv.write_text("osm_id,ref,name\n", encoding="utf-8")
+    bus_stops_csv = tmp_path / "bus_stops.csv"
+    bus_stops_csv.write_text("osm_id,name\n", encoding="utf-8")
     html = tmp_path / "index.html"
     html.write_text("<html>test</html>", encoding="utf-8")
     site = tmp_path / "_site"
@@ -34,6 +42,10 @@ def test_build_site_copies_map_data_and_creates_metadata(tmp_path, monkeypatch):
     monkeypatch.setattr(build_map_site, "SOURCE_SNAPSHOT", source_snapshot)
     monkeypatch.setattr(build_map_site, "SOURCE_ROADS_CSV", roads_csv)
     monkeypatch.setattr(build_map_site, "SOURCE_CHANGES_CSV", changes_csv)
+    monkeypatch.setattr(build_map_site, "SOURCE_BUS_ROUTES_GEOJSON", bus_routes_geojson)
+    monkeypatch.setattr(build_map_site, "SOURCE_BUS_STOPS_GEOJSON", bus_stops_geojson)
+    monkeypatch.setattr(build_map_site, "SOURCE_BUS_ROUTES_CSV", bus_routes_csv)
+    monkeypatch.setattr(build_map_site, "SOURCE_BUS_STOPS_CSV", bus_stops_csv)
     monkeypatch.setattr(build_map_site, "SOURCE_HTML", html)
     monkeypatch.setattr(build_map_site, "SITE_DIR", site)
     monkeypatch.setattr(build_map_site, "SITE_DATA_DIR", site / "data")
