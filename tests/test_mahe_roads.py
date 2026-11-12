@@ -30,17 +30,21 @@ def test_first_road_snapshot_marks_all_roads_as_baseline():
 
 
 def test_road_snapshot_detects_new_updated_existing_and_missing():
-    previous = {
-        "ways": {
-            "1001": {"version": 1, "signature": "old", "name": "Existing Road"},
-            "1002": {"version": 1, "signature": "old", "name": "Updated Road"},
-            "1003": {"version": 1, "signature": "old", "name": "Removed from extract"},
-        }
+    baseline_payload = {
+        "elements": [
+            make_way(1001, "Existing Road"),
+            make_way(1002, "Updated Road"),
+        ]
     }
+    _, previous, _ = mahe_roads.process_road_elements(baseline_payload)
+    previous["ways"]["1003"] = {
+        "version": 1, "signature": "previous", "name": "Removed from extract"
+    }
+
     payload = {
         "elements": [
             make_way(1001, "Existing Road"),
-            make_way(1002, "Updated Road", version=2),
+            make_way(1002, "Updated Road", version=2, lat2=-4.622),
             make_way(1004, "Newly Mapped Road"),
         ]
     }
@@ -49,7 +53,7 @@ def test_road_snapshot_detects_new_updated_existing_and_missing():
     statuses = {f["properties"]["osm_id"]: f["properties"]["road_status"] for f in features}
     change_types = {row["osm_id"]: row["change_type"] for row in changes}
 
-    assert statuses["1001"] == "updated"  # Signature is intentionally different from the old snapshot.
+    assert statuses["1001"] == "existing"
     assert statuses["1002"] == "updated"
     assert statuses["1004"] == "newly_mapped"
     assert change_types["1003"] == "no_longer_in_extract"
