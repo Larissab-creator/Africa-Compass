@@ -52,6 +52,7 @@ jobs:
             data/processed/victoria_service_points.csv
             data/processed/victoria_service_summary.csv
             data/processed/victoria_service_subcategory_summary.csv
+            data/processed/victoria_proximity_summary.csv
             data/processed/victoria_accessibility_grid_500m.csv
             data/processed/victoria_accessibility_metrics.json
           if-no-files-found: error
