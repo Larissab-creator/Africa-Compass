@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Explore the mapped road network of Mahé Island, Seychelles with Africa Compass.">
-  <title>Africa Compass | Mahé Road Map</title>
+  <meta name="description" content="Explore roads, bus routes and bus stops on Mahé Island, Seychelles with Africa Compass.">
+  <title>Africa Compass | Mahé Roads & Bus Routes</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <style>
     :root {
@@ -49,6 +49,8 @@
     .swatch { width: 23px; border-top: 4px solid #356a8a; border-radius: 4px; }
     .swatch.new { border-color: var(--coral); }
     .swatch.updated { border-color: var(--amber); }
+     .swatch.bus { border-color: #7A4EAB; }
+     .swatch.stop { border-top: 4px dotted #183B56; }
     .swatch.path { border-color: #89929b; }
     .detail { background: #f6f9fa; border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-height: 78px; }
     .detail .empty { color: var(--muted); font-size: 11px; line-height: 1.45; }
@@ -88,7 +90,7 @@
     <div class="brand-mark">A</div>
     <div>
       <div class="brand">AFRICA COMPASS</div>
-      <div class="brand-sub">Mahé Island · Road network explorer</div>
+      <div class="brand-sub">Mahé Island · Roads & bus routes explorer</div>
     </div>
     <div class="header-spacer"></div>
     <div class="live-pill">OPEN MAP · OSM DATA</div>
@@ -96,8 +98,8 @@
   <main>
     <aside>
       <div class="eyebrow">Seychelles · Mahé</div>
-      <h1>Explore the island's roads</h1>
-      <p class="intro">Find a road, inspect its mapped details and see where the OpenStreetMap record has changed between Africa Compass snapshots.</p>
+      <h1>Explore roads and buses</h1>
+      <p class="intro">Find local roads, mapped bus routes and bus stops across Mahé. Bus lines appear where route details have been mapped in OpenStreetMap.</p>
       <div class="snapshot">
         <div>Map data snapshot<strong id="snapshot-date">Loading…</strong></div>
         <div style="text-align:right">Mapped features<strong id="road-count">—</strong></div>
@@ -107,9 +109,9 @@
         <h2>Find a road or place</h2>
         <div class="search-wrap">
           <span class="search-icon">⌕</span>
-          <input id="road-search" type="search" placeholder="Search road name or reference…" autocomplete="off">
+          <input id="road-search" type="search" placeholder="Search a road, bus route or stop…" autocomplete="off">
         </div>
-        <p class="hint">Searches mapped road names and route references.</p>
+        <p class="hint">Search road names, bus route numbers, destinations and mapped bus stops.</p>
         <div id="search-results" class="results" aria-live="polite"></div>
       </section>
 
@@ -118,6 +120,8 @@
         <label class="filter-row"><input id="show-named" type="checkbox" checked> Named roads</label>
         <label class="filter-row"><input id="show-unnamed" type="checkbox" checked> Roads without a mapped name</label>
         <label class="filter-row"><input id="show-paths" type="checkbox" checked> Footpaths, cycleways and trails</label>
+         <label class="filter-row"><input id="show-bus-routes" type="checkbox"> Bus routes (where mapped)</label>
+         <label class="filter-row"><input id="show-bus-stops" type="checkbox"> Bus stops</label>
         <label class="filter-row"><input id="show-new" type="checkbox" checked> Newly mapped since last snapshot</label>
         <label class="filter-row"><input id="show-updated" type="checkbox" checked> Updated since last snapshot</label>
         <label class="filter-row"><input id="show-labels" type="checkbox" checked> Show road names on hover</label>
@@ -142,6 +146,8 @@
           <div class="legend-item"><span class="swatch" style="border-color:#8B1E3F"></span>Main routes</div>
           <div class="legend-item"><span class="swatch"></span>Local roads</div>
           <div class="legend-item"><span class="swatch path"></span>Footpaths / trails</div>
+           <div class="legend-item"><span class="swatch bus"></span>Bus routes</div>
+           <div class="legend-item"><span class="swatch stop"></span>Bus stops</div>
           <div class="legend-item"><span class="swatch new"></span>Newly mapped</div>
           <div class="legend-item"><span class="swatch updated"></span>Updated record</div>
         </div>
@@ -152,13 +158,18 @@
         <div class="detail">
           <a href="./data/mahe_roads.csv" download>Download road inventory CSV ↘</a><br>
           <a href="./data/mahe_road_changes.csv" download>Download road change log CSV ↘</a><br>
-          <a href="./data/mahe_roads.geojson" target="_blank" rel="noopener">Open road geometry GeoJSON ↗</a>
+          <a href="./data/mahe_roads.geojson" target="_blank" rel="noopener">Open road geometry GeoJSON ↗</a><br>
+           <a href="./data/mahe_bus_routes.csv" download>Download bus route list CSV ↘</a><br>
+           <a href="./data/mahe_bus_routes.geojson" target="_blank" rel="noopener">Open bus route geometry GeoJSON ↗</a><br>
+           <a href="./data/mahe_bus_stops.csv" download>Download bus stop list CSV ↘</a><br>
+           <a href="./data/mahe_bus_stops.geojson" target="_blank" rel="noopener">Open bus stop locations GeoJSON ↗</a><br>
+           <a href="https://sptc.sc/timetable/" target="_blank" rel="noopener">Official SPTC timetable ↗</a>
         </div>
       </section>
 
       <section class="section">
-        <h2>Selected road</h2>
-        <div class="detail" id="road-detail"><div class="empty">Select a road on the map or from the search results to inspect its details.</div></div>
+        <h2>Selected road, bus route or stop</h2>
+        <div class="detail" id="road-detail"><div class="empty">Select a road, bus route or stop on the map or from search results to inspect its details.</div></div>
       </section>
 
       <section class="section report">
@@ -168,7 +179,7 @@
         <p class="report-note">This opens OpenStreetMap at the map centre with the Notes layer available. Right-click the location, choose Add a note here, paste your report and submit it yourself. Your report is not sent to Africa Compass. For urgent road hazards, use the relevant local authority instead.</p>
       </section>
 
-      <p class="footer-note">Hover over a road or trail to see its mapped name. If no name is recorded, the map identifies it as unnamed. Road changes describe edits to OpenStreetMap records, not confirmed road construction. Map data © OpenStreetMap contributors · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">ODbL licence</a>.</p>
+      <p class="footer-note">Hover over a road or trail to see its mapped name. If no name is recorded, the map identifies it as unnamed. Hover over a road or trail to see its mapped name. If no name is recorded, the map identifies it as unnamed. Road changes describe edits to OpenStreetMap records, not confirmed road construction. Bus route coverage depends on OpenStreetMap mapping; check the official SPTC timetable for current service information. Map data © OpenStreetMap contributors · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">ODbL licence</a>.</p>
     </aside>
     <div class="map-shell">
       <div id="map"></div>
@@ -195,6 +206,8 @@
 
   const els = id => document.getElementById(id);
   let features = [];
+  let busRoutes = [];
+  let busStops = [];
   let visibleLayer = L.featureGroup().addTo(map);
   let selectedFeature = null;
 
