@@ -45,3 +45,4 @@ def test_accessibility_analysis_writes_outputs(tmp_path, monkeypatch):
     assert "nearest_healthcare_km" in grid.columns
     assert "nearest_education_km" in grid.columns
     assert "nearest_food_retail_km" in grid.columns
+    assert "nearest_bus_stop_km" in grid.columns
