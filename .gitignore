@@ -15,7 +15,7 @@ data/processed/*.duckdb
 data/processed/*.db
 !data/processed/.gitkeep
 
-# Editor / operating system files
+outputs/*.html\n!outputs/.gitkeep\n\n# Editor / operating system files
 .vscode/
 .idea/
 .DS_Store
