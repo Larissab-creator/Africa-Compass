@@ -44,6 +44,7 @@ node(w.bus_ways)->.way_nodes;
 node(r.bus_routes)->.route_nodes;
 node["highway"="bus_stop"](area.mahe)->.highway_stops;
 node["public_transport"="platform"](area.mahe)->.platform_stops;
+node["public_transport"="stop_position"](area.mahe)->.stop_positions;
 (
   .bus_routes;
   .bus_ways;
@@ -51,6 +52,7 @@ node["public_transport"="platform"](area.mahe)->.platform_stops;
   .route_nodes;
   .highway_stops;
   .platform_stops;
+  .stop_positions;
 );
 out meta;
 """
@@ -242,6 +244,7 @@ def process_bus_elements(
         is_bus_stop = (
             tags.get("highway") == "bus_stop"
             or tags.get("bus") in {"yes", "designated"}
+            or tags.get("public_transport") in {"platform", "stop_position"}
         )
         if is_bus_stop and node.get("lat") is not None and node.get("lon") is not None:
             stop_node_ids.add(node_id)
