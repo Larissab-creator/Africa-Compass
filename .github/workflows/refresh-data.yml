@@ -2,17 +2,20 @@ name: Refresh Victoria OSM dataset
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"
   push:
     branches: [main]
     paths:
       - "src/sey_pipeline.py"
       - "src/build_map.py"
       - "src/accessibility_analysis.py"
+      - "src/mahe_roads.py"
       - "requirements.txt"
       - ".github/workflows/refresh-data.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-data:
@@ -32,6 +35,9 @@ jobs:
 
       - name: Download and process OpenStreetMap data
         run: python src/sey_pipeline.py
+
+      - name: Extract Mahé road network and build island road map
+        run: python src/mahe_roads.py
 
       - name: Build interactive map
         run: python src/build_map.py
@@ -55,5 +61,22 @@ jobs:
             data/processed/victoria_proximity_summary.csv
             data/processed/victoria_accessibility_grid_500m.csv
             data/processed/victoria_accessibility_metrics.json
+            data/processed/mahe_roads.csv
+            data/processed/mahe_roads.geojson
+            data/processed/mahe_road_changes.csv
+            data/history/mahe_roads_snapshot.json
+            outputs/mahe_road_network.html
           if-no-files-found: error
           retention-days: 14
+
+      - name: Save Mahé road snapshot for the next comparison
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/history/mahe_roads_snapshot.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update Mahé road network snapshot [skip ci]"
+            git push
+          else
+            echo "Mahé road snapshot has no changes."
+          fi
