@@ -6,19 +6,19 @@ Africa Compass is being developed as an interactive geographical map, not a slid
 
 ## Data source and geography
 
-The road inventory is queried from OpenStreetMap using Mahé Island's OSM relation (relation ID 9435209) and its corresponding Overpass area. The query retrieves OSM ways tagged with `highway` and uses `out geom tags` so the full road-line geometry is preserved.
+The road inventory is queried from OpenStreetMap using Mahé Island's OSM relation (relation ID 9435209) and its corresponding Overpass area. The query retrieves OSM ways tagged with `highway` and uses `out meta geom` so the full road-line geometry, OSM version and edit timestamp are preserved.
 
 This is important: the Victoria point pipeline uses representative centre points for ways and relations. Those centre points are not suitable for drawing roads as lines. The Mahé road pipeline is a separate, geometry-preserving extraction.
 
 ## What appears on the map
 
-- **All mapped roads:** line geometry styled by OSM road class.
+- **Roads and streets:** line geometry styled by OSM road class. Footpaths, cycleways and trails are available as a separate optional layer.
 - **Named roads:** a selectable overlay; the underlying OpenStreetMap basemap also provides familiar road and place labels.
 - **Roads without a mapped name:** a separate layer so incomplete naming can be reviewed.
 - **Newly mapped since last snapshot:** road ways present in the current extract but absent from the previous saved snapshot.
 - **Updated since last snapshot:** road ways whose OSM version, tags or geometry changed between snapshots.
 
-Selecting a road displays its name where available, road class, surface, lanes, one-way tag, last OSM edit timestamp and a link to the OSM way.
+Selecting a road displays its name where available, road class, surface, lanes, one-way tag, OSM version, last OSM edit timestamp and a link to the OSM way.
 
 ## What “new road” means
 
