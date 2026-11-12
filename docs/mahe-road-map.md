@@ -39,7 +39,9 @@ The refresh workflow saves `data/history/mahe_roads_snapshot.json` to the reposi
 
 | Output | Purpose |
 |---|---|
-| `outputs/mahe_road_network.html` | Downloadable interactive island-wide road map |\n| `docs/map/index.html` | Source for the Africa Compass interactive web app |\n| `_site/` | Pages-ready site assembled during the workflow |
+| `outputs/mahe_road_network.html` | Downloadable interactive island-wide road map |
+| `docs/map/index.html` | Source for the Africa Compass interactive web app |
+| `_site/` | Pages-ready site assembled during the workflow |
 | `data/processed/mahe_roads.csv` | Road inventory and attributes |
 | `data/processed/mahe_roads.geojson` | Full line geometry for web maps and GIS |
 | `data/processed/mahe_road_changes.csv` | Newly mapped, updated and no-longer-in-extract ways |
@@ -67,4 +69,5 @@ Map data © OpenStreetMap contributors. OpenStreetMap data is made available und
 - An unnamed road is not necessarily a new or unrecognised road; its name may simply not be mapped.
 - Bus route lines are only drawn for mapped OSM bus route relations. No line is inferred from a route number or timetable. For current departure times and service updates, consult SPTC and its travel app.
 - Changes in OSM are community data edits and are not independent confirmation of a change on the ground.
-- The initial saved snapshot is a baseline. Newly mapped and updated status indicators become meaningful from the second successful snapshot onward.\n- The first GitHub Pages deployment requires Pages to be enabled with the source set to GitHub Actions in repository settings.
+- The initial saved snapshot is a baseline. Newly mapped and updated status indicators become meaningful from the second successful snapshot onward.
+- The first GitHub Pages deployment requires Pages to be enabled with the source set to GitHub Actions in repository settings.
