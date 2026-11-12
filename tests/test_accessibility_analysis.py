@@ -33,6 +33,9 @@ def test_accessibility_analysis_writes_outputs(tmp_path, monkeypatch):
     result = analysis.analyse_accessibility(input_csv=input_csv)
 
     assert all(path.exists() for path in result.values())
+    proximity = pd.read_csv(result["proximity_summary"])
+    assert set(["service_label", "median_distance_km", "share_of_grid_cells_within_500m_pct"]).issubset(proximity.columns)
+    assert "Bus stops" in proximity["service_label"].tolist()
     summary = pd.read_csv(result["service_summary"])
     counts = dict(zip(summary["analysis_group"], summary["mapped_locations"]))
     subcategories = pd.read_csv(result["subcategory_summary"])
