@@ -1,10 +1,10 @@
 # Africa Compass 🌍
 
-Africa Compass is an open-data mapping and data-engineering project that helps people discover places, essential services and transport options. The first pilot focuses on Victoria, Mahé, Seychelles, with a longer-term goal of expanding to other African and Indian Ocean countries.
+Africa Compass is an interactive mapping project focused on Mahé Island, Seychelles. Its main experience is a labelled island map with searchable road lines, selectable road details, separate footpath and trail layers, and a record of changes between OpenStreetMap snapshots.
 
 ## Current pilot
 
-The project now has two connected map views: a Victoria places-and-services pilot and an island-wide Mahé road map. The Mahé road pipeline retrieves actual road-line geometry from OpenStreetMap, keeps road names and attributes, builds an interactive map, and compares each refresh with a saved snapshot to identify roads newly mapped, updated, or no longer present in the extract.
+The main product is the Mahé road map web app in `docs/map/`. GitHub Actions retrieves the island's full road-line geometry from OpenStreetMap, builds a searchable Leaflet map, publishes it to GitHub Pages, and compares each refresh with a saved snapshot to identify road records newly mapped, updated or no longer present in the extract. The earlier Victoria services dataset remains available as a supporting pilot.
 
 This is an initial technical pilot, not a complete directory of Seychelles. Coverage depends on what is mapped in OpenStreetMap and on the tags used by local contributors.
 
@@ -15,9 +15,9 @@ This is an initial technical pilot, not a complete directory of Seychelles. Cove
 3. **Transform** – standardise names, OSM identifiers, coordinates, categories, addresses and available contact details.
 4. **Validate** – remove records with missing identifiers, names or coordinates; reject out-of-range coordinates and representative centres outside the Victoria pilot bounding box; remove duplicate OSM objects.
 5. **Load** – write a CSV file and a DuckDB table for analysis and visualisation.
-6. **Map Mahé roads** – retrieve full road-line geometry for Mahé, preserve road names and road attributes, and render selectable road layers on an island-wide interactive map.
-7. **Track map changes** – compare each road extract with the previous saved snapshot and flag newly mapped, updated and no-longer-present OSM road ways.
-8. **Analyse service patterns** – retain optional Victoria service counts and approximate straight-line proximity indicators for later map layers.
+6. **Map Mahé roads** – retrieve full road-line geometry for Mahé and preserve road names and road attributes.
+7. **Publish the map app** – assemble a responsive Leaflet website with search, selectable road layers, road detail panels and map-issue reporting links.
+8. **Track map changes** – compare each road extract with the previous saved snapshot and flag newly mapped, updated and no-longer-present OSM road ways.
 
 ### Data categories
 
@@ -71,13 +71,14 @@ The script calls public global Overpass API instances. If one host is at capacit
 
 ### 5. Build the maps
 
-Run the Mahé road map pipeline:
+Run the Mahé road map and website builder:
 
 ```bash
 python src/mahe_roads.py
+python src/build_map_site.py
 ```
 
-This creates `outputs/mahe_road_network.html`, a full-island interactive road map. The OpenStreetMap basemap supplies existing place and road labels; the Africa Compass road overlay lets you select road segments and inspect their names, road classes and mapped attributes. A saved snapshot is used on later runs to identify changes in the OSM road inventory.
+This creates a full-island road inventory and a Pages-ready website in `_site/`. The map uses OpenStreetMap's labelled basemap, with Africa Compass road overlays, search, selectable road details, separate footpaths and trails, and a way to prepare an OpenStreetMap note for a missing or incorrect road.
 
 The Victoria-focused places map and exploratory service analysis can still be generated with:
 
@@ -88,7 +89,7 @@ python src/accessibility_analysis.py
 ```
 
 
-The Mahé road map can be refreshed directly on GitHub without a local Python setup. Open the [Mahé road-map workflow](https://github.com/Larissab-creator/Africa-Compass/actions/workflows/refresh-mahe-roads.yml), choose **Run workflow**, and download the `africa-compass-mahe-roads` artifact from the completed run. It contains the interactive island map, road CSV, GeoJSON, change log and snapshot. A scheduled refresh also runs weekly. The first successful run creates the baseline; later runs compare against it.
+The Mahé road map and website are refreshed from the [Mahé road-map workflow](https://github.com/Larissab-creator/Africa-Compass/actions/workflows/refresh-mahe-roads.yml). It can be run manually and is scheduled weekly. The first successful snapshot establishes the baseline; later runs compare against it. The workflow publishes the interactive website to GitHub Pages and also packages the map and source data as a downloadable artifact.
 
 ### 6. Run the tests
 
@@ -122,6 +123,7 @@ Africa-Compass/
 │   ├── build_map.py
 │   ├── accessibility_analysis.py
 │   ├── mahe_roads.py
+│   ├── build_map_site.py
 │   └── __init__.py
 ├── outputs/
 │   ├── mahe_road_network.html (generated)
@@ -129,12 +131,15 @@ Africa-Compass/
 ├── tests/
 │   ├── test_pipeline.py
 │   ├── test_accessibility_analysis.py
-│   └── test_mahe_roads.py
+│   ├── test_mahe_roads.py
+│   └── test_map_site.py
 ├── .github/
 │   └── workflows/
 │       ├── refresh-mahe-roads.yml
 │       └── refresh-data.yml
 ├── docs/
+│   ├── map/
+│   │   └── index.html
 │   └── mahe-road-map.md
 ├── requirements.txt
 └── README.md
