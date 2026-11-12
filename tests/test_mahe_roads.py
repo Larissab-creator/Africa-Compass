@@ -27,6 +27,8 @@ def test_first_road_snapshot_marks_all_roads_as_baseline():
     assert snapshot["way_count"] == 2
     assert changes == []
     assert features[0]["geometry"]["coordinates"][0] == [55.45, -4.62]
+    assert features[0]["properties"]["version"] == 1
+    assert features[0]["properties"]["last_edited_utc"] == "2026-11-12T12:00:00Z"
 
 
 def test_road_snapshot_detects_new_updated_existing_and_missing():
