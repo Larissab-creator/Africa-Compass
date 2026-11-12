@@ -13,7 +13,7 @@ This is an initial technical pilot, not a complete directory of Seychelles. Cove
 1. **Extract** – query the OpenStreetMap Overpass API for named nodes, ways and relations.
 2. **Preserve** – save the source response as JSON under `data/raw/`.
 3. **Transform** – standardise names, OSM identifiers, coordinates, categories, addresses and available contact details.
-4. **Validate** – remove records with missing identifiers, names or coordinates; reject out-of-range coordinates; remove duplicate OSM objects.
+4. **Validate** – remove records with missing identifiers, names or coordinates; reject out-of-range coordinates and representative centres outside the Victoria pilot bounding box; remove duplicate OSM objects.
 5. **Load** – write a CSV file and a DuckDB table for analysis and visualisation.
 6. **Visualise** – build an interactive Folium map with switchable category layers.
 
@@ -124,7 +124,7 @@ Africa Compass is an independent project and is not affiliated with the OpenStre
 
 ## Current limitations and next steps
 
-- The geographic boundary is currently a small pilot area around Victoria, not all of Mahé or Seychelles.
+- The geographic boundary is currently a small pilot area around Victoria, not all of Mahé or Seychelles. Ways and relations are represented by their OpenStreetMap centre point; records whose centre falls outside the pilot bounding box are excluded from the map dataset.
 - The query currently focuses on named OSM features; unnamed roads and facilities are not included.
 - Some OSM objects may not have a direct point coordinate. For ways and relations, the pipeline uses the OSM centre coordinate when supplied.
 - Contact details and opening hours are included only when mapped in OSM. Missing information does not mean a service is closed or unavailable.
