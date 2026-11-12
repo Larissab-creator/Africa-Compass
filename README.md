@@ -10,3 +10,4 @@ Africa Compass is an interactive mapping project starting on Mahé, Seychelles. 
 - **Data note:** Changes show differences in OpenStreetMap records; they do not confirm that a road has been built or closed. Trail access and conditions are not independently verified. Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), licensed under the [ODbL](https://opendatacommons.org/licenses/odbl/).
 
 [View the Mahé road-map refresh workflow](https://github.com/Larissab-creator/Africa-Compass/actions/workflows/refresh-mahe-roads.yml).
+
