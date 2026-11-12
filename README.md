@@ -77,7 +77,7 @@ python src/build_map.py
 python src/accessibility_analysis.py
 ```
 
-The interactive HTML map is saved to `outputs/victoria_interactive_map.html`. The service-pattern analysis creates `outputs/victoria_service_accessibility_map.html` plus service-point, service-group, subcategory-summary, grid and metrics files under `data/processed/`. Open the HTML maps in a web browser.
+The interactive HTML map is saved to `outputs/victoria_interactive_map.html`. The service-pattern analysis creates `outputs/victoria_service_accessibility_map.html` plus service-point, service-group, subcategory-summary, proximity-summary, grid and metrics files under `data/processed/`. Open the HTML maps in a web browser.
 
 The project can also be run directly from GitHub without a local Python setup. Open the [Actions tab](https://github.com/Larissab-creator/Africa-Compass/actions/workflows/refresh-data.yml), select **Refresh Victoria OSM dataset**, choose **Run workflow**, and wait for the run to finish. Download the `africa-compass-victoria` artifact from the completed run to get the raw JSON, CSV, DuckDB database and interactive HTML map. The artifact is retained for 14 days.
 
