@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore the mapped road network of Mahé Island, Seychelles with Africa Compass.">
+  <title>Africa Compass | Mahé Road Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <style>
+    :root {
+      --ink: #193247; --muted: #647789; --line: #dce4e9; --paper: #ffffff;
+      --wash: #f3f7f8; --teal: #167b80; --teal-dark: #105e63;
+      --coral: #d1495b; --amber: #e6a23c; --shadow: 0 8px 28px rgba(19,46,62,.10);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); background: var(--wash); }
+    button, input, select, textarea { font: inherit; }
+    .app { min-height: 100%; display: flex; flex-direction: column; }
+    header { height: 70px; background: #123147; color: white; display: flex; align-items: center; padding: 0 24px; gap: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.12); z-index: 500; }
+    .brand-mark { width: 38px; height: 38px; border: 1.5px solid rgba(255,255,255,.8); border-radius: 50%; display: grid; place-items: center; font-size: 19px; font-weight: 800; color: #93d3cc; }
+    .brand { font-weight: 800; letter-spacing: .11em; font-size: 13px; }
+    .brand-sub { color: #c7d6df; font-size: 12px; margin-top: 3px; }
+    .header-spacer { flex: 1; }
+    .live-pill { border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.08); border-radius: 999px; color: #d6efeb; font-size: 12px; padding: 7px 11px; }
+    main { flex: 1; min-height: calc(100vh - 70px); display: grid; grid-template-columns: 350px minmax(0,1fr); }
+    aside { background: var(--paper); border-right: 1px solid var(--line); padding: 20px; overflow-y: auto; max-height: calc(100vh - 70px); }
+    .eyebrow { color: var(--teal); font-size: 11px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { font-size: 23px; line-height: 1.15; margin: 8px 0 8px; letter-spacing: -.025em; }
+    .intro { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0 0 17px; }
+    .snapshot { display: flex; justify-content: space-between; gap: 8px; border: 1px solid var(--line); background: #f8fbfb; border-radius: 10px; padding: 10px 12px; margin-bottom: 16px; font-size: 11px; color: var(--muted); }
+    .snapshot strong { color: var(--ink); display: block; font-size: 12px; margin-top: 2px; }
+    .section { border-top: 1px solid var(--line); padding-top: 16px; margin-top: 16px; }
+    .section h2 { font-size: 13px; margin: 0 0 11px; }
+    .search-wrap { position: relative; }
+    .search-wrap input { width: 100%; border: 1px solid #cbd7de; border-radius: 9px; padding: 11px 12px 11px 36px; outline: none; background: white; font-size: 13px; }
+    .search-wrap input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(22,123,128,.12); outline: none; }
+    .search-icon { position: absolute; left: 12px; top: 9px; color: #75899a; font-size: 17px; }
+    .hint { font-size: 11px; color: var(--muted); margin: 7px 0 0; }
+    .results { max-height: 210px; overflow-y: auto; margin-top: 7px; }
+    .result { display: block; width: 100%; border: 0; border-bottom: 1px solid #edf1f3; background: white; padding: 9px 4px; text-align: left; cursor: pointer; }
+    .result:hover { background: #f3f9f8; }
+    .result strong { display: block; font-size: 12px; color: var(--ink); }
+    .result span { display: block; color: var(--muted); font-size: 10px; margin-top: 3px; }
+    .filter-row { display: flex; align-items: center; gap: 9px; padding: 7px 0; color: #354c5e; font-size: 12px; }
+    .filter-row input { accent-color: var(--teal); width: 15px; height: 15px; }
+    select { border: 1px solid #cbd7de; border-radius: 8px; padding: 9px; width: 100%; color: var(--ink); background: white; font-size: 12px; }
+    .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 8px; }
+    .legend-item { display: flex; align-items: center; gap: 7px; font-size: 10px; color: #53697a; }
+    .swatch { width: 23px; border-top: 4px solid #356a8a; border-radius: 4px; }
+    .swatch.new { border-color: var(--coral); }
+    .swatch.updated { border-color: var(--amber); }
+    .swatch.path { border-color: #89929b; }
+    .detail { background: #f6f9fa; border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-height: 78px; }
+    .detail .empty { color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .detail h3 { margin: 0 0 8px; font-size: 14px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .detail-grid span { display: block; color: var(--muted); font-size: 10px; }
+    .detail-grid strong { display: block; font-size: 11px; margin-top: 2px; overflow-wrap: anywhere; }
+    .detail a { display: inline-block; margin-top: 10px; color: var(--teal-dark); font-size: 11px; font-weight: 700; text-decoration: none; }
+    .detail a:hover { text-decoration: underline; }
+    .report textarea { width: 100%; min-height: 72px; padding: 9px; border: 1px solid #cbd7de; border-radius: 8px; resize: vertical; font-size: 12px; }
+    .primary-btn { width: 100%; background: var(--teal); border: 0; border-radius: 8px; color: white; font-size: 12px; font-weight: 700; padding: 10px 12px; margin-top: 8px; cursor: pointer; }
+    .primary-btn:hover { background: var(--teal-dark); }
+    .report-note { color: var(--muted); font-size: 10px; line-height: 1.45; margin: 7px 0 0; }
+    .map-shell { position: relative; min-height: 540px; }
+    #map { width: 100%; height: calc(100vh - 70px); min-height: 540px; background: #eaf0ee; }
+    .map-status { position: absolute; z-index: 450; top: 16px; right: 16px; padding: 9px 12px; border-radius: 9px; background: rgba(255,255,255,.95); box-shadow: var(--shadow); font-size: 11px; color: #4c6575; }
+    .map-status strong { color: var(--ink); }
+    .loading { position: absolute; z-index: 700; inset: 0; display: grid; place-items: center; background: rgba(244,248,248,.92); color: var(--ink); font-size: 14px; }
+    .loading.hidden { display: none; }
+    .footer-note { font-size: 10px; color: var(--muted); line-height: 1.5; margin-top: 14px; }
+    .leaflet-popup-content { font-size: 12px; line-height: 1.55; }
+    @media (max-width: 820px) {
+      header { height: 60px; padding: 0 14px; }
+      main { display: flex; flex-direction: column; min-height: calc(100vh - 60px); }
+      aside { order: 2; max-height: none; overflow: visible; border-right: 0; border-top: 1px solid var(--line); padding: 17px; }
+      .map-shell { order: 1; min-height: 55vh; }
+      #map { height: 55vh; min-height: 390px; }
+      .map-status { top: 10px; right: 10px; }
+      .live-pill { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand-mark">A</div>
+    <div>
+      <div class="brand">AFRICA COMPASS</div>
+      <div class="brand-sub">Mahé Island · Road network explorer</div>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="live-pill">OPEN MAP · OSM DATA</div>
+  </header>
+  <main>
+    <aside>
+      <div class="eyebrow">Seychelles · Mahé</div>
+      <h1>Explore the island's roads</h1>
+      <p class="intro">Find a road, inspect its mapped details and see where the OpenStreetMap record has changed between Africa Compass snapshots.</p>
+      <div class="snapshot">
+        <div>Map data snapshot<strong id="snapshot-date">Loading…</strong></div>
+        <div style="text-align:right">Mapped features<strong id="road-count">—</strong></div>
+      </div>
+
+      <section class="section" style="border-top:0;padding-top:0;margin-top:0">
+        <h2>Find a road or place</h2>
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input id="road-search" type="search" placeholder="Search road name or reference…" autocomplete="off">
+        </div>
+        <p class="hint">Searches mapped road names and route references.</p>
+        <div id="search-results" class="results" aria-live="polite"></div>
+      </section>
+
+      <section class="section">
+        <h2>Map layers</h2>
+        <label class="filter-row"><input id="show-named" type="checkbox" checked> Named roads</label>
+        <label class="filter-row"><input id="show-unnamed" type="checkbox" checked> Roads without a mapped name</label>
+        <label class="filter-row"><input id="show-paths" type="checkbox"> Footpaths, cycleways and trails</label>
+        <label class="filter-row"><input id="show-new" type="checkbox" checked> Newly mapped since last snapshot</label>
+        <label class="filter-row"><input id="show-updated" type="checkbox" checked> Updated since last snapshot</label>
+        <label class="filter-row"><input id="show-labels" type="checkbox" checked> Show road names on hover</label>
+        <div style="margin-top:8px">
+          <h2>Road type</h2>
+          <select id="road-class">
+            <option value="all">All road types</option>
+            <option value="primary">Primary</option>
+            <option value="secondary">Secondary</option>
+            <option value="tertiary">Tertiary</option>
+            <option value="residential">Residential</option>
+            <option value="unclassified">Unclassified</option>
+            <option value="service">Service roads</option>
+            <option value="track">Tracks</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Map key</h2>
+        <div class="legend">
+          <div class="legend-item"><span class="swatch" style="border-color:#8B1E3F"></span>Main routes</div>
+          <div class="legend-item"><span class="swatch"></span>Local roads</div>
+          <div class="legend-item"><span class="swatch path"></span>Footpaths / trails</div>
+          <div class="legend-item"><span class="swatch new"></span>Newly mapped</div>
+          <div class="legend-item"><span class="swatch updated"></span>Updated record</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Selected road</h2>
+        <div class="detail" id="road-detail"><div class="empty">Select a road on the map or from the search results to inspect its details.</div></div>
+      </section>
+
+      <section class="section report">
+        <h2>Report a missing or incorrect road</h2>
+        <textarea id="report-text" placeholder="Describe the missing road, incorrect name or map detail…"></textarea>
+        <button class="primary-btn" id="report-button">Prepare an OpenStreetMap report</button>
+        <p class="report-note">This opens OpenStreetMap's note tool at the map centre. Your report is not sent to Africa Compass; review and submit it yourself on OpenStreetMap. For urgent road hazards, use the relevant local authority instead.</p>
+      </section>
+
+      <p class="footer-note">Road changes describe edits to OpenStreetMap records, not confirmed road construction. Map data © OpenStreetMap contributors · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">ODbL licence</a>.</p>
+    </aside>
+    <div class="map-shell">
+      <div id="map"></div>
+      <div class="map-status" id="map-status">Loading island road data…</div>
+      <div class="loading" id="loading">Loading Mahé road network…</div>
+    </div>
+  </main>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+(() => {
+  const PATH_CLASSES = new Set(["footway","path","steps","cycleway","bridleway","pedestrian","corridor","platform"]);
+  const COLORS = {
+    motorway:"#8B1E3F", trunk:"#B23A48", primary:"#D97706", secondary:"#E7A23B",
+    tertiary:"#E0B84B", residential:"#356A8A", unclassified:"#527C91",
+    living_street:"#6B8F71", service:"#7F8C8D", track:"#8B8B62", road:"#6C757D"
+  };
+  const WIDTHS = {motorway:5,trunk:4.5,primary:4,secondary:3.5,tertiary:3,residential:2.4,unclassified:2.2,living_street:2.2,service:1.8,track:1.6,road:2};
+  const map = L.map("map", {preferCanvas:true, zoomControl:true});
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom:19,
+    attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>'
+  }).addTo(map);
+
+  const els = id => document.getElementById(id);
+  let features = [];
+  let visibleLayer = L.featureGroup().addTo(map);
+  let selectedFeature = null;
+
+  const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[char]));
+
+  function roadStyle(feature) {
+    const p = feature.properties || {};
+    let colour = COLORS[p.road_class] || "#6C757D";
+    let weight = WIDTHS[p.road_class] || 2;
+    if (p.road_status === "newly_mapped") { colour = "#D1495B"; weight += 1.5; }
+    else if (p.road_status === "updated") { colour = "#E6A23C"; weight += 1.3; }
+    return {color:colour, weight, opacity:.9, lineCap:"round", lineJoin:"round"};
+  }
+
+  function showDetails(p) {
+    selectedFeature = p;
+    const fields = [
+      ["Road type", p.road_class || "Not recorded"],
+      ["Surface", p.surface || "Not recorded"],
+      ["Lanes", p.lanes || "Not recorded"],
+      ["One-way", p.oneway || "Not recorded"],
+      ["Last OSM edit", p.last_edited_utc || "Not recorded"],
+      ["Map status", p.road_status || "Baseline"]
+    ];
+    els("road-detail").innerHTML =
+      '<h3>' + escapeHtml(p.name || "Unnamed road") + '</h3>' +
+      '<div class="detail-grid">' + fields.map(([k,v]) =>
+        '<div><span>' + escapeHtml(k) + '</span><strong>' + escapeHtml(v) + '</strong></div>'
+      ).join("") + '</div>' +
+      '<a href="' + escapeHtml(p.osm_url || ("https://www.openstreetmap.org/way/" + p.osm_id)) +
+      '" target="_blank" rel="noopener">Open this road in OpenStreetMap ↗</a>';
+  }
+
+  function passesFilters(p) {
+    const path = PATH_CLASSES.has(p.road_class);
+    const named = Boolean((p.name || "").trim());
+    const status = p.road_status || "baseline";
+    const cls = els("road-class").value;
+    if (path && !els("show-paths").checked) return false;
+    if (!path && named && !els("show-named").checked) return false;
+    if (!path && !named && !els("show-unnamed").checked) return false;
+    if (status === "newly_mapped" && !els("show-new").checked) return false;
+    if (status === "updated" && !els("show-updated").checked) return false;
+    if (cls !== "all" && p.road_class !== cls) return false;
+    return true;
+  }
+
+  function renderRoads() {
+    visibleLayer.clearLayers();
+    const filtered = features.filter(f => passesFilters(f.properties || {}));
+    const geo = L.geoJSON({type:"FeatureCollection",features:filtered}, {
+      style:roadStyle,
+      onEachFeature:(feature, layer) => {
+        const p = feature.properties || {};
+        const label = (p.name || "Unnamed road") + " · " + (p.road_class || "road");
+        if (els("show-labels").checked) layer.bindTooltip(escapeHtml(label), {sticky:true, direction:"top"});
+        layer.on("click", () => showDetails(p));
+        layer.bindPopup(
+          '<strong>' + escapeHtml(p.name || "Unnamed road") + '</strong><br>' +
+          escapeHtml(p.road_class || "road") + '<br>' +
+          '<span style="color:#647789">Status: ' + escapeHtml(p.road_status || "baseline") + '</span>'
+        );
+      }
+    });
+    geo.addTo(visibleLayer);
+    els("map-status").innerHTML = '<strong>' + filtered.length.toLocaleString() +
+      '</strong> of ' + features.length.toLocaleString() + ' road features visible';
+  }
+
+  function searchRoads() {
+    const query = els("road-search").value.trim().toLowerCase();
+    const box = els("search-results");
+    box.innerHTML = "";
+    if (query.length < 2) return;
+    const results = features.filter(f => {
+      const p = f.properties || {};
+      return (p.name || "").toLowerCase().includes(query) ||
+             (p.ref || "").toLowerCase().includes(query);
+    }).slice(0,25);
+    if (!results.length) {
+      box.innerHTML = '<p class="hint">No matching mapped road found. It may be unnamed or not yet in OpenStreetMap.</p>';
+      return;
+    }
+    results.forEach(f => {
+      const p = f.properties || {};
+      const btn = document.createElement("button");
+      btn.className = "result";
+      const strong = document.createElement("strong");
+      strong.textContent = p.name || "Unnamed road";
+      const span = document.createElement("span");
+      span.textContent = (p.road_class || "road") + (p.ref ? " · " + p.ref : "");
+      btn.append(strong, span);
+      btn.addEventListener("click", () => {
+        const latlngs = f.geometry.coordinates.map(c => [c[1],c[0]]);
+        const bounds = L.latLngBounds(latlngs);
+        map.fitBounds(bounds, {padding:[35,35], maxZoom:16});
+        showDetails(p);
+        els("road-search").value = p.name || "";
+      });
+      box.appendChild(btn);
+    });
+    if (results.length === 25) {
+      const note = document.createElement("p");
+      note.className = "hint";
+      note.textContent = "Showing the first 25 matches.";
+      box.appendChild(note);
+    }
+  }
+
+  async function loadMapData() {
+    try {
+      const [roadsResponse, metaResponse] = await Promise.all([
+        fetch("./data/mahe_roads.geojson"),
+        fetch("./data/mahe_map_metadata.json")
+      ]);
+      if (!roadsResponse.ok) throw new Error("Road data could not be loaded (" + roadsResponse.status + ").");
+      const data = await roadsResponse.json();
+      const metadata = metaResponse.ok ? await metaResponse.json() : {};
+      features = data.features || [];
+      if (!features.length) throw new Error("The road dataset contains no mapped features.");
+
+      const named = features.filter(f => (f.properties.name || "").trim()).length;
+      const newly = features.filter(f => f.properties.road_status === "newly_mapped").length;
+      const updated = features.filter(f => f.properties.road_status === "updated").length;
+      els("road-count").textContent = features.length.toLocaleString();
+      els("snapshot-date").textContent = metadata.snapshot_created_utc
+        ? new Date(metadata.snapshot_created_utc).toLocaleDateString("en-GB")
+        : "Snapshot loaded";
+      els("map-status").innerHTML = '<strong>' + features.length.toLocaleString() +
+        '</strong> roads & paths · ' + named.toLocaleString() + ' named';
+      els("loading").classList.add("hidden");
+      renderRoads();
+      const all = L.geoJSON(data);
+      if (all.getBounds().isValid()) map.fitBounds(all.getBounds(), {padding:[20,20]});
+      else map.setView([-4.65,55.48],11);
+      if (metadata.baseline_established === false) {
+        els("map-status").innerHTML += ' · baseline snapshot';
+      }
+      console.info("Africa Compass Mahé data loaded", {features:features.length,named,newly,updated});
+    } catch (error) {
+      els("loading").textContent = "The road map could not load. " + error.message;
+      els("map-status").textContent = "Map data unavailable";
+      console.error(error);
+    }
+  }
+
+  ["show-named","show-unnamed","show-paths","show-new","show-updated","show-labels","road-class"]
+    .forEach(id => els(id).addEventListener("change", renderRoads));
+  els("road-search").addEventListener("input", searchRoads);
+  els("report-button").addEventListener("click", async () => {
+    const text = els("report-text").value.trim();
+    if (!text) {
+      alert("Please describe the missing or incorrect road first.");
+      return;
+    }
+    const centre = map.getCenter();
+    const noteUrl = "https://www.openstreetmap.org/note/new?lat=" +
+      encodeURIComponent(centre.lat) + "&lon=" + encodeURIComponent(centre.lng) +
+      "#map=18/" + centre.lat + "/" + centre.lng;
+    try {
+      await navigator.clipboard.writeText("Africa Compass map issue: " + text);
+      alert("Your report text has been copied. OpenStreetMap will open at the current map centre; paste the note and submit it there.");
+    } catch (_) {
+      alert("OpenStreetMap will open at the current map centre. Please copy your report text before submitting it.");
+    }
+    window.open(noteUrl, "_blank", "noopener");
+  });
+
+  map.setView([-4.65,55.48],11);
+  loadMapData();
+})();
+</script>
+</body>
+</html>
