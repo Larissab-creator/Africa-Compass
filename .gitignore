@@ -8,7 +8,11 @@ venv/
 .env
 
 # Generated OpenStreetMap extracts and processed outputs
+# Keep the original public OpenStreetMap API responses for reproducibility.
+# Other raw JSON files remain ignored unless explicitly added.
 data/raw/*.json
+!data/raw/mahe_roads_overpass.json
+!data/raw/mahe_bus_routes_overpass.json
 !data/raw/.gitkeep
 data/processed/*.csv
 data/processed/*.duckdb
