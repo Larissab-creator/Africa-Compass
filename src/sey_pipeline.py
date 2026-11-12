@@ -24,7 +24,12 @@ RAW_FILE = RAW_DIR / "victoria_osm_raw.json"
 CSV_FILE = PROCESSED_DIR / "victoria_places.csv"
 DB_FILE = PROCESSED_DIR / "africa_compass.duckdb"
 
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+OVERPASS_ENDPOINTS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.private.coffee/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+]
+OVERPASS_URL = OVERPASS_ENDPOINTS[0]
 # Overpass bbox order: south, west, north, east.
 BBOX = (-4.64, 55.43, -4.60, 55.47)
 SLEEP_SECONDS = 2
@@ -44,37 +49,69 @@ LOGGER = logging.getLogger("africa_compass")
 
 
 def fetch_map_data(
-    retries: int = 3, session: requests.Session | None = None
+    retries: int = 2, session: requests.Session | None = None
 ) -> dict[str, Any]:
-    """Download named OpenStreetMap features and preserve the raw response."""
+    """Download OSM data, failing over between public global Overpass instances."""
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     client = session or requests.Session()
-    headers = {"User-Agent": "AfricaCompass/0.2 (educational mapping project)"}
+    headers = {
+        "User-Agent": (
+            "AfricaCompass/0.3 (open-source educational mapping project; "
+            "https://github.com/Larissab-creator/Africa-Compass)"
+        )
+    }
+    last_error: Exception | None = None
 
-    for attempt in range(1, retries + 1):
-        try:
-            response = client.post(
-                OVERPASS_URL, data={"data": QUERY}, headers=headers, timeout=120
-            )
-            response.raise_for_status()
-            payload = response.json()
-            if not isinstance(payload.get("elements"), list):
-                raise ValueError("Overpass response does not contain an elements list")
-            RAW_FILE.write_text(
-                json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
-            )
-            LOGGER.info(
-                "Saved %s raw features to %s", len(payload["elements"]), RAW_FILE
-            )
-            time.sleep(SLEEP_SECONDS)
-            return payload
-        except (requests.RequestException, ValueError, json.JSONDecodeError) as exc:
-            LOGGER.warning("Download attempt %s/%s failed: %s", attempt, retries, exc)
-            if attempt == retries:
-                raise
-            time.sleep(2**attempt)
+    for endpoint in OVERPASS_ENDPOINTS:
+        for attempt in range(1, retries + 1):
+            try:
+                LOGGER.info("Querying Overpass endpoint: %s", endpoint)
+                response = client.post(
+                    endpoint, data={"data": QUERY}, headers=headers, timeout=120
+                )
+                response.raise_for_status()
+                payload = response.json()
+                if not isinstance(payload.get("elements"), list):
+                    raise ValueError(
+                        "Overpass response does not contain an elements list"
+                    )
+                RAW_FILE.write_text(
+                    json.dumps(payload, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+                LOGGER.info(
+                    "Saved %s raw features from %s to %s",
+                    len(payload["elements"]), endpoint, RAW_FILE,
+                )
+                time.sleep(SLEEP_SECONDS)
+                return payload
+            except requests.HTTPError as exc:
+                last_error = exc
+                status = exc.response.status_code if exc.response is not None else None
+                LOGGER.warning(
+                    "Overpass endpoint %s returned HTTP %s", endpoint, status
+                )
+                # Capacity/rate-limit errors should move to a different host.
+                if status in {429, 500, 502, 503, 504}:
+                    break
+                # A client/query error is unlikely to be fixed by retrying this host.
+                if status is not None and 400 <= status < 500:
+                    break
+                if attempt < retries:
+                    time.sleep(2**attempt)
+            except (requests.RequestException, ValueError, json.JSONDecodeError) as exc:
+                last_error = exc
+                LOGGER.warning(
+                    "Overpass endpoint %s attempt %s/%s failed: %s",
+                    endpoint, attempt, retries, exc,
+                )
+                if attempt < retries:
+                    time.sleep(2**attempt)
 
-    raise RuntimeError("OSM download failed unexpectedly")
+    raise RuntimeError(
+        "All configured Overpass endpoints failed. Last error: "
+        f"{last_error}"
+    ) from last_error
 
 
 def classify_feature(tags: dict[str, Any]) -> str:
