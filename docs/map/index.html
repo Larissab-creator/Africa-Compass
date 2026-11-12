@@ -225,7 +225,6 @@
   }
 
   function showDetails(p) {
-    selectedFeature = p;
     const fields = [
       ["Road type", p.road_class || "Not recorded"],
       ["Surface", p.surface || "Not recorded"],
@@ -241,6 +240,57 @@
       ).join("") + '</div>' +
       '<a href="' + escapeHtml(p.osm_url || ("https://www.openstreetmap.org/way/" + p.osm_id)) +
       '" target="_blank" rel="noopener">Open this road in OpenStreetMap ↗</a>';
+  }
+
+  function showBusRouteDetails(p) {
+    const fields = [
+      ["Route number", p.ref || "Not recorded"],
+      ["From", p.from || "Not recorded"],
+      ["To", p.to || "Not recorded"],
+      ["Operator", p.operator || "Not recorded"],
+      ["Mapped stops", String(p.stop_count ?? 0)],
+      ["Geometry", p.geometry_status || "Not recorded"]
+    ];
+    els("road-detail").innerHTML =
+      '<h3>Bus ' + escapeHtml(p.ref || p.name || "Route") + '</h3>' +
+      (p.name ? '<p class="hint">' + escapeHtml(p.name) + '</p>' : '') +
+      '<div class="detail-grid">' + fields.map(([k,v]) =>
+        '<div><span>' + escapeHtml(k) + '</span><strong>' + escapeHtml(v) + '</strong></div>'
+      ).join("") + '</div>' +
+      '<a href="' + escapeHtml(p.osm_url || ("https://www.openstreetmap.org/relation/" + p.osm_id)) +
+      '" target="_blank" rel="noopener">Open bus route relation in OpenStreetMap ↗</a>';
+  }
+
+  function showBusStopDetails(p) {
+    const refs = Array.isArray(p.route_refs) ? p.route_refs.join(", ") : "";
+    const fields = [
+      ["Stop type", p.public_transport || p.highway || "Bus stop"],
+      ["Served routes", refs || "Not linked to a mapped route"],
+      ["OSM ID", p.osm_id || "Not recorded"]
+    ];
+    els("road-detail").innerHTML =
+      '<h3>' + escapeHtml(p.name || "Unnamed bus stop") + '</h3>' +
+      '<div class="detail-grid">' + fields.map(([k,v]) =>
+        '<div><span>' + escapeHtml(k) + '</span><strong>' + escapeHtml(v) + '</strong></div>'
+      ).join("") + '</div>' +
+      '<a href="' + escapeHtml(p.osm_url || ("https://www.openstreetmap.org/node/" + p.osm_id)) +
+      '" target="_blank" rel="noopener">Open bus stop in OpenStreetMap ↗</a>';
+  }
+
+  const BUS_PALETTE = ["#7A4EAB","#C04F77","#147D78","#B46A19","#315D9A","#A04832"];
+  function busRouteColour(feature) {
+    const p = feature.properties || {};
+    const token = String(p.ref || p.name || p.osm_id || "bus");
+    let hash = 0;
+    for (let i = 0; i < token.length; i++) hash = (hash * 31 + token.charCodeAt(i)) >>> 0;
+    return BUS_PALETTE[hash % BUS_PALETTE.length];
+  }
+
+  function lineCoordinates(feature) {
+    const geometry = feature.geometry || {};
+    const parts = geometry.type === "LineString" ? [geometry.coordinates || []] :
+      geometry.type === "MultiLineString" ? (geometry.coordinates || []) : [];
+    return parts.flat().map(c => [c[1], c[0]]);
   }
 
   function passesFilters(p) {
@@ -260,30 +310,68 @@
   function renderRoads() {
     visibleLayer.clearLayers();
     const filtered = features.filter(f => passesFilters(f.properties || {}));
-    const geo = L.geoJSON({type:"FeatureCollection",features:filtered}, {
+    L.geoJSON({type:"FeatureCollection",features:filtered}, {
       style:roadStyle,
       onEachFeature:(feature, layer) => {
         const p = feature.properties || {};
-        const label = (p.name || "Unnamed road") + " · " + (p.road_class || "road");
+        const isPath = PATH_CLASSES.has(p.road_class);
+        const hoverLabel = p.name && p.name.trim()
+          ? p.name + " · " + (p.road_class || (isPath ? "path" : "road"))
+          : "Unnamed " + (isPath ? "path" : "road") + " · " + (p.road_class || "type not recorded");
         if (els("show-labels").checked) {
-          const hoverLabel = p.name && p.name.trim()
-            ? p.name + " · " + (p.road_class || "road")
-            : "Unnamed " + (PATH_CLASSES.has(p.road_class) ? "path" : "road") + " · " + (p.road_class || "type not recorded");
           layer.bindTooltip(escapeHtml(hoverLabel), {
             sticky:true, direction:"top", opacity:.98, className:"road-hover-label"
           });
         }
         layer.on("click", () => showDetails(p));
         layer.bindPopup(
-          '<strong>' + escapeHtml(p.name || "Unnamed road") + '</strong><br>' +
-          escapeHtml(p.road_class || "road") + '<br>' +
+          '<strong>' + escapeHtml(p.name || (isPath ? "Unnamed path" : "Unnamed road")) + '</strong><br>' +
+          escapeHtml(p.road_class || (isPath ? "path" : "road")) + '<br>' +
           '<span style="color:#647789">Status: ' + escapeHtml(p.road_status || "baseline") + '</span>'
         );
       }
-    });
-    geo.addTo(visibleLayer);
+    }).addTo(visibleLayer);
+
+    if (els("show-bus-routes").checked && busRoutes.length) {
+      L.geoJSON({type:"FeatureCollection",features:busRoutes}, {
+        style:feature => ({
+          color:busRouteColour(feature), weight:5, opacity:.96,
+          lineCap:"round", lineJoin:"round"
+        }),
+        onEachFeature:(feature, layer) => {
+          const p = feature.properties || {};
+          const label = "Bus " + (p.ref || p.name || "route") +
+            (p.from || p.to ? " · " + (p.from || "?") + " → " + (p.to || "?") : "");
+          if (els("show-labels").checked) layer.bindTooltip(escapeHtml(label), {
+            sticky:true, direction:"top", opacity:.98, className:"road-hover-label"
+          });
+          layer.on("click", () => showBusRouteDetails(p));
+          layer.bindPopup('<strong>' + escapeHtml(label) + '</strong>');
+        }
+      }).addTo(visibleLayer);
+    }
+
+    if (els("show-bus-stops").checked && busStops.length) {
+      L.geoJSON({type:"FeatureCollection",features:busStops}, {
+        pointToLayer:(_feature, latlng) => L.circleMarker(latlng, {
+          radius:5, color:"#ffffff", weight:1.5, fillColor:"#183B56", fillOpacity:.95
+        }),
+        onEachFeature:(feature, layer) => {
+          const p = feature.properties || {};
+          const label = p.name || "Unnamed bus stop";
+          if (els("show-labels").checked) layer.bindTooltip(escapeHtml(label), {
+            sticky:true, direction:"top", opacity:.98, className:"road-hover-label"
+          });
+          layer.on("click", () => showBusStopDetails(p));
+          layer.bindPopup('<strong>' + escapeHtml(label) + '</strong>');
+        }
+      }).addTo(visibleLayer);
+    }
+
     els("map-status").innerHTML = '<strong>' + filtered.length.toLocaleString() +
-      '</strong> of ' + features.length.toLocaleString() + ' road features visible';
+      '</strong> of ' + features.length.toLocaleString() + ' road features · ' +
+      busRoutes.length.toLocaleString() + ' bus route lines · ' +
+      busStops.length.toLocaleString() + ' bus stops in data';
   }
 
   function searchRoads() {
@@ -291,34 +379,70 @@
     const box = els("search-results");
     box.innerHTML = "";
     if (query.length < 2) return;
-    const results = features.filter(f => {
+
+    const roadResults = features.filter(f => {
       const p = f.properties || {};
       return (p.name || "").toLowerCase().includes(query) ||
              (p.ref || "").toLowerCase().includes(query);
-    }).slice(0,25);
+    }).map(feature => ({kind:"road",feature}));
+    const busResults = busRoutes.filter(f => {
+      const p = f.properties || {};
+      return [p.ref,p.name,p.from,p.to,p.operator].some(value =>
+        String(value || "").toLowerCase().includes(query)
+      );
+    }).map(feature => ({kind:"route",feature}));
+    const stopResults = busStops.filter(f => {
+      const p = f.properties || {};
+      return (p.name || "").toLowerCase().includes(query) ||
+        (Array.isArray(p.route_refs) && p.route_refs.some(ref => ref.toLowerCase().includes(query)));
+    }).map(feature => ({kind:"stop",feature}));
+    const results = [...roadResults,...busResults,...stopResults].slice(0,25);
     if (!results.length) {
-      box.innerHTML = '<p class="hint">No matching mapped road found. It may be unnamed or not yet in OpenStreetMap.</p>';
+      box.innerHTML = '<p class="hint">No matching road, bus route or stop was found in the mapped data.</p>';
       return;
     }
-    results.forEach(f => {
+
+    results.forEach(result => {
+      const f = result.feature;
       const p = f.properties || {};
       const btn = document.createElement("button");
       btn.className = "result";
       const strong = document.createElement("strong");
-      strong.textContent = p.name || "Unnamed road";
       const span = document.createElement("span");
-      span.textContent = (p.road_class || "road") + (p.ref ? " · " + p.ref : "");
+      if (result.kind === "route") {
+        strong.textContent = "Bus " + (p.ref || p.name || "route");
+        span.textContent = "Bus route · " + (p.from || "Start unknown") + " → " + (p.to || "End unknown");
+      } else if (result.kind === "stop") {
+        strong.textContent = p.name || "Unnamed bus stop";
+        span.textContent = "Bus stop" + (p.route_refs && p.route_refs.length ? " · Routes " + p.route_refs.join(", ") : "");
+      } else {
+        strong.textContent = p.name || "Unnamed road";
+        span.textContent = (p.road_class || "road") + (p.ref ? " · " + p.ref : "");
+      }
       btn.append(strong, span);
       btn.addEventListener("click", () => {
-        const latlngs = f.geometry.coordinates.map(c => [c[1],c[0]]);
-        const bounds = L.latLngBounds(latlngs);
-        map.fitBounds(bounds, {padding:[35,35], maxZoom:16});
-        showDetails(p);
-        els("road-search").value = p.name || "";
+        if (result.kind === "road") {
+          const latlngs = lineCoordinates(f);
+          if (latlngs.length) map.fitBounds(L.latLngBounds(latlngs), {padding:[35,35], maxZoom:16});
+          showDetails(p);
+        } else if (result.kind === "route") {
+          els("show-bus-routes").checked = true;
+          renderRoads();
+          const latlngs = lineCoordinates(f);
+          if (latlngs.length) map.fitBounds(L.latLngBounds(latlngs), {padding:[35,35], maxZoom:16});
+          showBusRouteDetails(p);
+        } else {
+          els("show-bus-stops").checked = true;
+          renderRoads();
+          const coords = f.geometry.coordinates;
+          map.setView([coords[1],coords[0]],17);
+          showBusStopDetails(p);
+        }
+        els("road-search").value = result.kind === "route" ? ("Bus " + (p.ref || p.name || "")) : (p.name || "");
       });
       box.appendChild(btn);
     });
-    if (results.length === 25) {
+    if (roadResults.length + busResults.length + stopResults.length > 25) {
       const note = document.createElement("p");
       note.className = "hint";
       note.textContent = "Showing the first 25 matches.";
@@ -328,14 +452,20 @@
 
   async function loadMapData() {
     try {
-      const [roadsResponse, metaResponse] = await Promise.all([
+      const [roadsResponse, metaResponse, busRoutesResponse, busStopsResponse] = await Promise.all([
         fetch("./data/mahe_roads.geojson"),
-        fetch("./data/mahe_map_metadata.json")
+        fetch("./data/mahe_map_metadata.json"),
+        fetch("./data/mahe_bus_routes.geojson"),
+        fetch("./data/mahe_bus_stops.geojson")
       ]);
       if (!roadsResponse.ok) throw new Error("Road data could not be loaded (" + roadsResponse.status + ").");
       const data = await roadsResponse.json();
       const metadata = metaResponse.ok ? await metaResponse.json() : {};
+      const busRouteData = busRoutesResponse.ok ? await busRoutesResponse.json() : {features:[]};
+      const busStopData = busStopsResponse.ok ? await busStopsResponse.json() : {features:[]};
       features = data.features || [];
+      busRoutes = busRouteData.features || [];
+      busStops = busStopData.features || [];
       if (!features.length) throw new Error("The road dataset contains no mapped features.");
 
       const named = features.filter(f => (f.properties.name || "").trim()).length;
@@ -346,7 +476,8 @@
         ? new Date(metadata.snapshot_created_utc).toLocaleDateString("en-GB")
         : "Snapshot loaded";
       els("map-status").innerHTML = '<strong>' + features.length.toLocaleString() +
-        '</strong> roads & paths · ' + named.toLocaleString() + ' named';
+        '</strong> roads & paths · ' + named.toLocaleString() + ' named · ' +
+        busRoutes.length.toLocaleString() + ' bus route lines';
       els("loading").classList.add("hidden");
       renderRoads();
       const all = L.geoJSON(data);
@@ -355,7 +486,7 @@
       if (metadata.baseline_established === false) {
         els("map-status").innerHTML += ' · baseline snapshot';
       }
-      console.info("Africa Compass Mahé data loaded", {features:features.length,named,newly,updated});
+      console.info("Africa Compass Mahé data loaded", {features:features.length,named,newly,updated,busRoutes:busRoutes.length,busStops:busStops.length});
     } catch (error) {
       els("loading").textContent = "The road map could not load. " + error.message;
       els("map-status").textContent = "Map data unavailable";
@@ -363,7 +494,7 @@
     }
   }
 
-  ["show-named","show-unnamed","show-paths","show-new","show-updated","show-labels","road-class"]
+  ["show-named","show-unnamed","show-paths","show-new","show-updated","show-labels","show-bus-routes","show-bus-stops","road-class"]
     .forEach(id => els(id).addEventListener("change", renderRoads));
   els("road-search").addEventListener("input", searchRoads);
   els("report-button").addEventListener("click", async () => {
