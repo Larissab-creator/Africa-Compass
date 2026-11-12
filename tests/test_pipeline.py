@@ -1,0 +1,72 @@
+import pandas as pd
+
+from src import sey_pipeline as pipeline
+
+
+def test_transform_features_extracts_named_node_and_way():
+    payload = {
+        "elements": [
+            {
+                "type": "node",
+                "id": 101,
+                "lat": -4.62,
+                "lon": 55.45,
+                "tags": {"name": "Victoria Hospital", "amenity": "hospital"},
+            },
+            {
+                "type": "way",
+                "id": 202,
+                "center": {"lat": -4.621, "lon": 55.451},
+                "tags": {"name": "Independence Avenue", "highway": "residential"},
+            },
+            {"type": "node", "id": 303, "lat": -4.62, "lon": 55.45, "tags": {}},
+        ]
+    }
+
+    result = pipeline.transform_features(payload)
+
+    assert len(result) == 2
+    hospital = result.loc[result["name"] == "Victoria Hospital"].iloc[0]
+    road = result.loc[result["name"] == "Independence Avenue"].iloc[0]
+    assert hospital["category"] == "service"
+    assert hospital["subcategory"] == "hospital"
+    assert road["category"] == "transport"
+    assert road["latitude"] == -4.621
+
+
+def test_validate_features_removes_bad_and_duplicate_records():
+    sample = pd.DataFrame(
+        [
+            {"osm_id": "1", "osm_type": "node", "name": "A", "latitude": -4.6, "longitude": 55.4},
+            {"osm_id": "1", "osm_type": "node", "name": "A duplicate", "latitude": -4.6, "longitude": 55.4},
+            {"osm_id": "", "osm_type": "node", "name": "Blank ID", "latitude": -4.6, "longitude": 55.4},
+            {"osm_id": "3", "osm_type": "way", "name": "Bad latitude", "latitude": 120, "longitude": 55.4},
+            {"osm_id": "4", "osm_type": "way", "name": "Missing coordinates", "latitude": None, "longitude": 55.4},
+        ]
+    )
+
+    result = pipeline.validate_features(sample)
+
+    assert len(result) == 1
+    assert result.iloc[0]["osm_id"] == "1"
+
+
+def test_save_outputs_writes_csv_and_duckdb(tmp_path, monkeypatch):
+    csv_path = tmp_path / "victoria_places.csv"
+    db_path = tmp_path / "africa_compass.duckdb"
+    monkeypatch.setattr(pipeline, "PROCESSED_DIR", tmp_path)
+    monkeypatch.setattr(pipeline, "CSV_FILE", csv_path)
+    monkeypatch.setattr(pipeline, "DB_FILE", db_path)
+
+    sample = pd.DataFrame(
+        [{"osm_id": "10", "osm_type": "node", "name": "Test Place", "category": "place"}]
+    )
+    pipeline.save_outputs(sample)
+
+    assert csv_path.exists()
+    assert db_path.exists()
+    import duckdb
+
+    with duckdb.connect(str(db_path), read_only=True) as connection:
+        count = connection.execute("SELECT COUNT(*) FROM victoria_places").fetchone()[0]
+    assert count == 1
