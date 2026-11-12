@@ -70,3 +70,29 @@ def test_save_outputs_writes_csv_and_duckdb(tmp_path, monkeypatch):
     with duckdb.connect(str(db_path), read_only=True) as connection:
         count = connection.execute("SELECT COUNT(*) FROM victoria_places").fetchone()[0]
     assert count == 1
+
+
+def test_build_map_creates_interactive_html(tmp_path):
+    from src.build_map import build_map
+
+    input_csv = tmp_path / "places.csv"
+    output_html = tmp_path / "map.html"
+    pd.DataFrame(
+        [
+            {"name": "Victoria Hospital", "category": "service", "subcategory": "hospital",
+             "latitude": -4.62, "longitude": 55.45, "address": "Victoria",
+             "phone": "", "opening_hours": "", "website": ""},
+            {"name": "Independence Avenue", "category": "transport", "subcategory": "residential",
+             "latitude": -4.621, "longitude": 55.451, "address": "",
+             "phone": "", "opening_hours": "", "website": ""},
+        ]
+    ).to_csv(input_csv, index=False)
+
+    result = build_map(input_csv=input_csv, output_html=output_html)
+
+    assert result == output_html
+    assert output_html.exists()
+    html_content = output_html.read_text(encoding="utf-8")
+    assert "Victoria Hospital" in html_content
+    assert "Service (1)" in html_content
+    assert "Transport (1)" in html_content
