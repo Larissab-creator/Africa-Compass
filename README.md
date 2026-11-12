@@ -14,7 +14,8 @@ This is an initial technical pilot, not a complete directory of Seychelles. Cove
 2. **Preserve** – save the source response as JSON under `data/raw/`.
 3. **Transform** – standardise names, OSM identifiers, coordinates, categories, addresses and available contact details.
 4. **Validate** – remove records with missing identifiers, names or coordinates; reject out-of-range coordinates; remove duplicate OSM objects.
-5. **Load** – write a CSV file and a DuckDB table for analysis and visualisation.\n6. **Visualise** – build an interactive Folium map with switchable category layers.
+5. **Load** – write a CSV file and a DuckDB table for analysis and visualisation.
+6. **Visualise** – build an interactive Folium map with switchable category layers.
 
 ### Data categories
 
@@ -66,7 +67,17 @@ python src/sey_pipeline.py
 
 The script calls the public Overpass API. It needs an internet connection and may take a little time if the service is busy.
 
-### 5. Run the tests
+### 5. Build the interactive map
+
+After the pipeline has created the processed CSV, run:
+
+```bash
+python src/build_map.py
+```
+
+The interactive HTML map is saved to `outputs/victoria_interactive_map.html`. Open that file in a web browser.
+
+### 6. Run the tests
 
 ```bash
 python -m pytest -q
@@ -92,8 +103,12 @@ Africa-Compass/
 │   ├── raw/
 │   └── processed/
 ├── src/
-│   └── sey_pipeline.py
-├── outputs/\n│   └── victoria_interactive_map.html (generated)\n├── tests/
+│   ├── sey_pipeline.py
+│   ├── build_map.py
+│   └── __init__.py
+├── outputs/
+│   └── victoria_interactive_map.html (generated)
+├── tests/
 │   └── test_pipeline.py
 ├── requirements.txt
 └── README.md
