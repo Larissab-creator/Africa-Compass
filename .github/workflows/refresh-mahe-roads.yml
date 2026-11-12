@@ -11,6 +11,10 @@ on:
       - "requirements.txt"
       - ".github/workflows/refresh-mahe-roads.yml"
 
+concurrency:
+  group: mahe-road-map-refresh
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -34,7 +38,7 @@ jobs:
         run: python src/mahe_roads.py
 
       - name: Package road map and inventory
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: africa-compass-mahe-roads-${{ github.run_number }}
           path: |
@@ -54,7 +58,9 @@ jobs:
           git add data/history/mahe_roads_snapshot.json
           if ! git diff --cached --quiet; then
             git commit -m "Update Mahé road network snapshot [skip ci]"
-            git push
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
           else
             echo "Mahé road snapshot has no changes."
           fi
