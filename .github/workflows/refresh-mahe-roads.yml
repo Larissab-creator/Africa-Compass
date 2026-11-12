@@ -1,4 +1,4 @@
-name: Publish Africa Compass Mahé road map
+name: Publish Africa Compass Mahé road and bus map
 
 on:
   workflow_dispatch:
