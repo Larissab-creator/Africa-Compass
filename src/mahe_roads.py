@@ -40,12 +40,12 @@ OVERPASS_ENDPOINTS = [
     "https://overpass.private.coffee/api/interpreter",
     "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
 ]
-REQUEST_TIMEOUT = 180
-RETRIES_PER_ENDPOINT = 2
+REQUEST_TIMEOUT = 110
+RETRIES_PER_ENDPOINT = 1
 REQUEST_PAUSE_SECONDS = 2
 
 QUERY = f"""
-[out:json][timeout:150];
+[out:json][timeout:90];
 area({MAHE_AREA_ID})->.mahe;
 way["highway"](area.mahe);
 out meta geom;
