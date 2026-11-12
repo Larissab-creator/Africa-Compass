@@ -63,6 +63,7 @@ Running `python src/accessibility_analysis.py` after the main pipeline creates:
 
 - `data/processed/victoria_service_points.csv` — service features with analysis groups; suitable for filtering and point-map visualisations.
 - `data/processed/victoria_service_summary.csv` — group counts and percentages; suitable for a bar chart.
+- `data/processed/victoria_service_subcategory_summary.csv` — detailed OSM subcategory counts within each group; suitable for a more granular dashboard.
 - `data/processed/victoria_accessibility_grid_500m.csv` — grid-cell counts, coordinates and nearest mapped service distances; suitable for exploratory grid/bubble maps.
 - `data/processed/victoria_accessibility_metrics.json` — headline metrics and methodological caveats.
 - `outputs/victoria_service_accessibility_map.html` — interactive map with a mapped-service grid and selectable service layers.
