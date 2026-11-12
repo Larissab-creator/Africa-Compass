@@ -14,7 +14,7 @@ This is an initial technical pilot, not a complete directory of Seychelles. Cove
 2. **Preserve** – save the source response as JSON under `data/raw/`.
 3. **Transform** – standardise names, OSM identifiers, coordinates, categories, addresses and available contact details.
 4. **Validate** – remove records with missing identifiers, names or coordinates; reject out-of-range coordinates; remove duplicate OSM objects.
-5. **Load** – write a CSV file and a DuckDB table for analysis and visualisation.
+5. **Load** – write a CSV file and a DuckDB table for analysis and visualisation.\n6. **Visualise** – build an interactive Folium map with switchable category layers.
 
 ### Data categories
 
@@ -93,7 +93,7 @@ Africa-Compass/
 │   └── processed/
 ├── src/
 │   └── sey_pipeline.py
-├── tests/
+├── outputs/\n│   └── victoria_interactive_map.html (generated)\n├── tests/
 │   └── test_pipeline.py
 ├── requirements.txt
 └── README.md
