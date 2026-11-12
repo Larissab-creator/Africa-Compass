@@ -250,7 +250,7 @@ def process_bus_elements(
 
     stop_features: list[dict[str, Any]] = []
     stop_rows: list[dict[str, Any]] = []
-    for node_id in sorted(stop_node_ids, key=lambda value: int(value) if value.isdigit() else value):
+    for node_id in sorted(stop_node_ids, key=lambda value: (0, int(value)) if value.isdigit() else (1, value)):
         node = nodes.get(node_id)
         if not node or node.get("lat") is None or node.get("lon") is None:
             continue
