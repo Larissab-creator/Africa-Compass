@@ -66,7 +66,7 @@ python -m pip install -r requirements.txt
 python src/sey_pipeline.py
 ```
 
-The script calls the public Overpass API. It needs an internet connection and may take a little time if the service is busy.
+The script calls public global Overpass API instances. If one host is at capacity or unavailable, the downloader tries the configured alternatives. It needs an internet connection; public instances are best-effort services and may occasionally be busy.
 
 ### 5. Build the interactive map
 
