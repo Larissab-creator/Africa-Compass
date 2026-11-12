@@ -38,15 +38,19 @@ The refresh workflow saves `data/history/mahe_roads_snapshot.json` to the reposi
 
 | Output | Purpose |
 |---|---|
-| `outputs/mahe_road_network.html` | Interactive island-wide road map |
+| `outputs/mahe_road_network.html` | Downloadable interactive island-wide road map |\n| `docs/map/index.html` | Source for the Africa Compass interactive web app |\n| `_site/` | Pages-ready site assembled during the workflow |
 | `data/processed/mahe_roads.csv` | Road inventory and attributes |
 | `data/processed/mahe_roads.geojson` | Full line geometry for web maps and GIS |
 | `data/processed/mahe_road_changes.csv` | Newly mapped, updated and no-longer-in-extract ways |
 | `data/history/mahe_roads_snapshot.json` | Compact comparison baseline for future refreshes |
 
-## Map technology
+## Web map experience
 
-The map is generated with Folium/Leaflet and uses OpenStreetMap tiles as the labelled basemap. Its road overlays are generated from the separate full-geometry GeoJSON inventory. Leaflet supports GeoJSON line layers and selectable overlays.
+The public-facing app lives in `docs/map/index.html` and is assembled by `src/build_map_site.py`. It provides road-name search, selectable road layers, a separate footpaths/trails filter, road-type filtering, a road detail panel, downloads for the road inventory and change log, and a hand-off to OpenStreetMap Notes for map corrections. The issue-report action copies the description and map-centre coordinates; the user reviews and submits the note on OpenStreetMap. Africa Compass does not collect or submit reports itself.
+
+The site is published using GitHub Pages from the `refresh-mahe-roads.yml` workflow. For the first deployment, enable Pages in repository settings: **Settings → Pages → Build and deployment → Source → GitHub Actions**. Once enabled, the workflow builds the map data, uploads the website artifact and deploys the site.
+
+The interactive app uses Leaflet with the OpenStreetMap standard tile layer as its labelled basemap. Its road overlays are generated from the separate full-geometry GeoJSON inventory. The map requests tiles only for the area a visitor is currently viewing; it does not bulk-download or prefetch map tiles.
 
 ## Attribution and licensing
 
@@ -57,4 +61,4 @@ Map data © OpenStreetMap contributors. OpenStreetMap data is made available und
 - The road inventory reflects OpenStreetMap coverage and tagging at the time of the snapshot.
 - An unnamed road is not necessarily a new or unrecognised road; its name may simply not be mapped.
 - Changes in OSM are community data edits and are not independent confirmation of a change on the ground.
-- The initial saved snapshot is a baseline. Newly mapped and updated status indicators become meaningful from the second successful snapshot onward.
+- The initial saved snapshot is a baseline. Newly mapped and updated status indicators become meaningful from the second successful snapshot onward.\n- The first GitHub Pages deployment requires Pages to be enabled with the source set to GitHub Actions in repository settings.
