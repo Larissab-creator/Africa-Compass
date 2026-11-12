@@ -48,7 +48,7 @@ QUERY = f"""
 [out:json][timeout:150];
 area({MAHE_AREA_ID})->.mahe;
 way["highway"](area.mahe);
-out geom tags;
+out meta geom;
 """
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -300,9 +300,23 @@ def build_road_map(features: list[dict[str, Any]], output_file: Path = MAP_FILE)
     """
     fmap.get_root().html.add_child(folium.Element(title))
 
-    all_roads = folium.FeatureGroup(name="All mapped roads", show=True)
+    pedestrian_classes = {
+        "footway", "path", "steps", "cycleway", "bridleway",
+        "pedestrian", "corridor", "platform",
+    }
+    road_features = [
+        feature for feature in features
+        if feature["properties"].get("road_class") not in pedestrian_classes
+    ]
+    path_features = [
+        feature for feature in features
+        if feature["properties"].get("road_class") in pedestrian_classes
+    ]
+
+    all_roads = folium.FeatureGroup(name="Roads and streets", show=True)
     named_roads = folium.FeatureGroup(name="Named roads", show=False)
     unlabelled_roads = folium.FeatureGroup(name="Roads without a mapped name", show=False)
+    paths_layer = folium.FeatureGroup(name="Footpaths, cycleways and trails", show=False)
     new_roads = folium.FeatureGroup(name="Newly mapped since last snapshot", show=True)
     updated_roads = folium.FeatureGroup(name="Updated since last snapshot", show=False)
 
@@ -316,8 +330,8 @@ def build_road_map(features: list[dict[str, Any]], output_file: Path = MAP_FILE)
         }
 
     all_geojson = folium.GeoJson(
-        {"type": "FeatureCollection", "features": features},
-        name="All mapped roads",
+        {"type": "FeatureCollection", "features": road_features},
+        name="Roads and streets",
         style_function=style,
         tooltip=GeoJsonTooltip(
             fields=["name", "road_class", "ref", "surface", "road_status"],
@@ -336,19 +350,19 @@ def build_road_map(features: list[dict[str, Any]], output_file: Path = MAP_FILE)
     ).add_to(all_roads)
 
     named_features = [
-        feature for feature in features
+        feature for feature in road_features
         if feature["properties"].get("name")
     ]
     unnamed_features = [
-        feature for feature in features
+        feature for feature in road_features
         if not feature["properties"].get("name")
     ]
     new_features = [
-        feature for feature in features
+        feature for feature in road_features
         if feature["properties"].get("road_status") == "newly_mapped"
     ]
     updated_features = [
-        feature for feature in features
+        feature for feature in road_features
         if feature["properties"].get("road_status") == "updated"
     ]
 
@@ -368,10 +382,11 @@ def build_road_map(features: list[dict[str, Any]], output_file: Path = MAP_FILE)
 
     add_subset(named_roads, named_features, "#177E89")
     add_subset(unlabelled_roads, unnamed_features, "#8A8F98")
+    add_subset(paths_layer, path_features, "#89929B")
     add_subset(new_roads, new_features, "#D1495B")
     add_subset(updated_roads, updated_features, "#F4A261")
 
-    for layer in (all_roads, named_roads, unlabelled_roads, new_roads, updated_roads):
+    for layer in (all_roads, named_roads, unlabelled_roads, paths_layer, new_roads, updated_roads):
         layer.add_to(fmap)
 
     legend = """
@@ -383,6 +398,7 @@ def build_road_map(features: list[dict[str, Any]], output_file: Path = MAP_FILE)
       <span style="color:#8B1E3F;">━━</span> Main routes<br>
       <span style="color:#356A8A;">━━</span> Local roads<br>
       <span style="color:#177E89;">━━</span> Named-road overlay<br>
+      <span style="color:#89929B;">━━</span> Footpaths and trails<br>
       <span style="color:#D1495B;">━━</span> Newly mapped in this snapshot<br>
       <span style="color:#F4A261;">━━</span> Updated in this snapshot
     </div>
