@@ -4,7 +4,7 @@ Africa Compass is an open-data mapping and data-engineering project that helps p
 
 ## Current pilot
 
-The current Python pipeline retrieves named OpenStreetMap (OSM) features within a small bounding box around Victoria. It preserves the original API response, standardises useful fields, performs basic quality checks, and writes analysis-ready CSV and DuckDB outputs.
+The project now has two connected map views: a Victoria places-and-services pilot and an island-wide Mahé road map. The Mahé road pipeline retrieves actual road-line geometry from OpenStreetMap, keeps road names and attributes, builds an interactive map, and compares each refresh with a saved snapshot to identify roads newly mapped, updated, or no longer present in the extract.
 
 This is an initial technical pilot, not a complete directory of Seychelles. Coverage depends on what is mapped in OpenStreetMap and on the tags used by local contributors.
 
@@ -15,8 +15,9 @@ This is an initial technical pilot, not a complete directory of Seychelles. Cove
 3. **Transform** – standardise names, OSM identifiers, coordinates, categories, addresses and available contact details.
 4. **Validate** – remove records with missing identifiers, names or coordinates; reject out-of-range coordinates and representative centres outside the Victoria pilot bounding box; remove duplicate OSM objects.
 5. **Load** – write a CSV file and a DuckDB table for analysis and visualisation.
-6. **Visualise** – build an interactive Folium map with switchable category layers.
-7. **Analyse mapped-service patterns** – group service tags, build an approximate 500m grid, calculate straight-line distances to selected mapped service types, and create Flourish-ready outputs.
+6. **Map Mahé roads** – retrieve full road-line geometry for Mahé, preserve road names and road attributes, and render selectable road layers on an island-wide interactive map.
+7. **Track map changes** – compare each road extract with the previous saved snapshot and flag newly mapped, updated and no-longer-present OSM road ways.
+8. **Analyse service patterns** – retain optional Victoria service counts and approximate straight-line proximity indicators for later map layers.
 
 ### Data categories
 
@@ -68,16 +69,24 @@ python src/sey_pipeline.py
 
 The script calls public global Overpass API instances. If one host is at capacity or unavailable, the downloader tries the configured alternatives. It needs an internet connection; public instances are best-effort services and may occasionally be busy.
 
-### 5. Build the interactive map
+### 5. Build the maps
 
-After the pipeline has created the processed CSV, run:
+Run the Mahé road map pipeline:
 
 ```bash
+python src/mahe_roads.py
+```
+
+This creates `outputs/mahe_road_network.html`, a full-island interactive road map. The OpenStreetMap basemap supplies existing place and road labels; the Africa Compass road overlay lets you select road segments and inspect their names, road classes and mapped attributes. A saved snapshot is used on later runs to identify changes in the OSM road inventory.
+
+The Victoria-focused places map and exploratory service analysis can still be generated with:
+
+```bash
+python src/sey_pipeline.py
 python src/build_map.py
 python src/accessibility_analysis.py
 ```
 
-The interactive HTML map is saved to `outputs/victoria_interactive_map.html`. The service-pattern analysis creates `outputs/victoria_service_accessibility_map.html` plus service-point, service-group, subcategory-summary, proximity-summary, grid and metrics files under `data/processed/`. Open the HTML maps in a web browser.
 
 The project can also be run directly from GitHub without a local Python setup. Open the [Actions tab](https://github.com/Larissab-creator/Africa-Compass/actions/workflows/refresh-data.yml), select **Refresh Victoria OSM dataset**, choose **Run workflow**, and wait for the run to finish. Download the `africa-compass-victoria` artifact from the completed run to get the raw JSON, CSV, DuckDB database and interactive HTML map. The artifact is retained for 14 days.
 
@@ -134,6 +143,6 @@ Africa Compass is an independent project and is not affiliated with the OpenStre
 - The service grouping is a first-pass classification of extracted OSM tags and requires local validation.
 - The 500m grid is not population-weighted and contains coastal and non-residential cells. Nearest-facility distances are straight-line calculations from grid-cell centres, not walking/driving network distances or travel times.
 
-Planned work includes expanding the geographic coverage, improving service classification and quality checks, adding an interactive map, and building analytical visualisations.
+Planned work includes improving road-name coverage, validating road changes, adding a road-update review process, and gradually expanding the mapped features beyond Mahé.
 
 **Important:** Africa Compass is a discovery and data-analysis prototype, not an emergency-services directory, navigation system or guarantee that a listed place is open or operational.
