@@ -70,6 +70,7 @@
     .loading.hidden { display: none; }
     .footer-note { font-size: 10px; color: var(--muted); line-height: 1.5; margin-top: 14px; }
     .leaflet-popup-content { font-size: 12px; line-height: 1.55; }
+    .road-hover-label { border: 1px solid #183B56; border-radius: 5px; padding: 4px 7px; color: #183B56; font-size: 11px; font-weight: 700; box-shadow: 0 2px 9px rgba(0,0,0,.18); }
     @media (max-width: 820px) {
       header { height: 60px; padding: 0 14px; }
       main { display: flex; flex-direction: column; min-height: calc(100vh - 60px); }
@@ -116,7 +117,7 @@
         <h2>Map layers</h2>
         <label class="filter-row"><input id="show-named" type="checkbox" checked> Named roads</label>
         <label class="filter-row"><input id="show-unnamed" type="checkbox" checked> Roads without a mapped name</label>
-        <label class="filter-row"><input id="show-paths" type="checkbox"> Footpaths, cycleways and trails</label>
+        <label class="filter-row"><input id="show-paths" type="checkbox" checked> Footpaths, cycleways and trails</label>
         <label class="filter-row"><input id="show-new" type="checkbox" checked> Newly mapped since last snapshot</label>
         <label class="filter-row"><input id="show-updated" type="checkbox" checked> Updated since last snapshot</label>
         <label class="filter-row"><input id="show-labels" type="checkbox" checked> Show road names on hover</label>
@@ -167,7 +168,7 @@
         <p class="report-note">This opens OpenStreetMap at the map centre with the Notes layer available. Right-click the location, choose Add a note here, paste your report and submit it yourself. Your report is not sent to Africa Compass. For urgent road hazards, use the relevant local authority instead.</p>
       </section>
 
-      <p class="footer-note">Road changes describe edits to OpenStreetMap records, not confirmed road construction. Map data © OpenStreetMap contributors · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">ODbL licence</a>.</p>
+      <p class="footer-note">Hover over a road or trail to see its mapped name. If no name is recorded, the map identifies it as unnamed. Road changes describe edits to OpenStreetMap records, not confirmed road construction. Map data © OpenStreetMap contributors · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">ODbL licence</a>.</p>
     </aside>
     <div class="map-shell">
       <div id="map"></div>
@@ -251,7 +252,14 @@
       onEachFeature:(feature, layer) => {
         const p = feature.properties || {};
         const label = (p.name || "Unnamed road") + " · " + (p.road_class || "road");
-        if (els("show-labels").checked) layer.bindTooltip(escapeHtml(label), {sticky:true, direction:"top"});
+        if (els("show-labels").checked) {
+          const hoverLabel = p.name && p.name.trim()
+            ? p.name + " · " + (p.road_class || "road")
+            : "Unnamed " + (PATH_CLASSES.has(p.road_class) ? "path" : "road") + " · " + (p.road_class || "type not recorded");
+          layer.bindTooltip(escapeHtml(hoverLabel), {
+            sticky:true, direction:"top", opacity:.98, className:"road-hover-label"
+          });
+        }
         layer.on("click", () => showDetails(p));
         layer.bindPopup(
           '<strong>' + escapeHtml(p.name || "Unnamed road") + '</strong><br>' +
