@@ -98,3 +98,43 @@ def test_build_map_creates_interactive_html(tmp_path):
     assert "Victoria Hospital" in html_content
     assert "Service (1)" in html_content
     assert "Transport (1)" in html_content
+
+
+def test_fetch_map_data_fails_over_to_second_overpass_endpoint(tmp_path, monkeypatch):
+    class FakeResponse:
+        def __init__(self, status_code, payload=None):
+            self.status_code = status_code
+            self.payload = payload or {}
+
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                error = pipeline.requests.HTTPError(f"HTTP {self.status_code}")
+                error.response = self
+                raise error
+
+        def json(self):
+            return self.payload
+
+    class FakeSession:
+        def __init__(self):
+            self.urls = []
+
+        def post(self, url, **kwargs):
+            self.urls.append(url)
+            if len(self.urls) == 1:
+                return FakeResponse(502)
+            return FakeResponse(200, {"elements": [{"type": "node", "id": 1}]})
+
+    endpoints = ["https://primary.example/api/interpreter", "https://fallback.example/api/interpreter"]
+    monkeypatch.setattr(pipeline, "OVERPASS_ENDPOINTS", endpoints)
+    monkeypatch.setattr(pipeline, "RAW_DIR", tmp_path)
+    monkeypatch.setattr(pipeline, "RAW_FILE", tmp_path / "raw.json")
+    monkeypatch.setattr(pipeline, "SLEEP_SECONDS", 0)
+    monkeypatch.setattr(pipeline.time, "sleep", lambda seconds: None)
+    session = FakeSession()
+
+    result = pipeline.fetch_map_data(retries=1, session=session)
+
+    assert session.urls == endpoints
+    assert result["elements"][0]["id"] == 1
+    assert (tmp_path / "raw.json").exists()
